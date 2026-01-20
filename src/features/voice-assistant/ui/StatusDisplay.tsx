@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View, Text, useColorScheme, ScrollView } from 'react-native';
-import { COLORS } from '@/shared/config';
+import { Colors } from '@/shared/config';
 
 interface StatusDisplayProps {
   state: 'idle' | 'recording' | 'processing' | 'speaking';
@@ -35,7 +35,7 @@ export function StatusDisplay({ state, question, answer, error }: StatusDisplayP
       <Text
         style={[
           styles.statusText,
-          { color: isDark ? COLORS.darkText : COLORS.lightText },
+          { color: isDark ? Colors.darkText : Colors.lightText },
         ]}
       >
         {statusMessage}
