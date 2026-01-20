@@ -9,18 +9,13 @@ interface TranscribeResult {
   error?: string;
 }
 
-/**
- * Whisper API를 사용하여 음성을 텍스트로 변환
- */
 export async function transcribeAudio(audioUri: string): Promise<TranscribeResult> {
   let retryCount = 0;
 
   while (retryCount < OPENAI_CONFIG.retryCount) {
     try {
-      // expo-file-system File 클래스 사용
       const expoFile = new ExpoFile(audioUri);
 
-      // 파일 존재 확인
       if (!expoFile.exists) {
         return {
           text: '',
@@ -29,24 +24,19 @@ export async function transcribeAudio(audioUri: string): Promise<TranscribeResul
         };
       }
 
-      // 파일을 base64로 읽기
       const base64Audio = await expoFile.base64();
-
-      // base64를 Blob으로 변환
       const audioBlob = base64ToBlob(base64Audio, getAudioMimeType());
 
-      // File 객체 생성 (Web API File)
       const audioFile = new File(
         [audioBlob],
         `recording.${getAudioFileExtension()}`,
         { type: getAudioMimeType() }
       );
 
-      // Whisper API 호출 (response_format: 'text'일 때 string으로 반환됨)
       const text = await openai.audio.transcriptions.create({
         file: audioFile,
         model: 'whisper-1',
-        language: VOICE_CONFIG.language.split('-')[0], // 'ko'
+        language: VOICE_CONFIG.language.split('-')[0],
         response_format: 'text',
       });
 
@@ -74,7 +64,6 @@ export async function transcribeAudio(audioUri: string): Promise<TranscribeResul
         };
       }
 
-      // 재시도 전 대기
       await new Promise((resolve) => setTimeout(resolve, 1000 * retryCount));
     }
   }
@@ -86,9 +75,6 @@ export async function transcribeAudio(audioUri: string): Promise<TranscribeResul
   };
 }
 
-/**
- * Base64 문자열을 Blob으로 변환
- */
 function base64ToBlob(base64: string, mimeType: string): Blob {
   const byteCharacters = atob(base64);
   const byteNumbers = new Array(byteCharacters.length);

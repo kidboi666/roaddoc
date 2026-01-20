@@ -23,7 +23,6 @@ export default function HomeScreen() {
     cancel,
   } = useVoiceAssistant();
 
-  // 버튼 탭 핸들러
   const handlePress = () => {
     if (state === 'idle') {
       startListening();
@@ -34,7 +33,6 @@ export default function HomeScreen() {
     }
   };
 
-  // 버튼 롱프레스 핸들러 (취소)
   const handleLongPress = () => {
     if (state !== 'idle') {
       cancel();
@@ -43,7 +41,6 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* 헤더 */}
       <View style={styles.header}>
         <Pressable
           onPress={() => router.push('/settings')}
@@ -60,7 +57,6 @@ export default function HomeScreen() {
         </Text>
       </View>
 
-      {/* 대화 영역 */}
       <View style={[styles.conversationArea, { backgroundColor: colors.card }]}>
         <StatusDisplay
           state={state}
@@ -70,7 +66,6 @@ export default function HomeScreen() {
         />
       </View>
 
-      {/* 마이크 버튼 영역 */}
       <View style={styles.micArea}>
         <VoiceButton
           state={state}

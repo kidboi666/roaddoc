@@ -26,11 +26,9 @@ export function VoiceButton({
   const isDark = colorScheme === 'dark';
   const colors = isDark ? Colors.dark : Colors.light;
 
-  // 애니메이션 값
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
 
-  // 녹음 중 펄스 애니메이션
   useEffect(() => {
     if (state === 'recording') {
       const pulse = Animated.loop(
@@ -54,7 +52,6 @@ export function VoiceButton({
     }
   }, [state, pulseAnim]);
 
-  // 처리 중 회전 애니메이션
   useEffect(() => {
     if (state === 'processing') {
       const rotate = Animated.loop(
@@ -76,7 +73,6 @@ export function VoiceButton({
     outputRange: ['0deg', '360deg'],
   });
 
-  // 상태별 스타일
   const getButtonStyle = () => {
     switch (state) {
       case 'recording':
@@ -90,7 +86,6 @@ export function VoiceButton({
     }
   };
 
-  // 상태별 아이콘
   const getIcon = () => {
     switch (state) {
       case 'recording':
@@ -109,7 +104,6 @@ export function VoiceButton({
 
   return (
     <View style={styles.container}>
-      {/* 배경 링 (녹음 중) */}
       {state === 'recording' && (
         <Animated.View
           style={[
@@ -122,7 +116,6 @@ export function VoiceButton({
         />
       )}
 
-      {/* 메인 버튼 */}
       <Pressable
         onPress={onPress}
         onLongPress={onLongPress}

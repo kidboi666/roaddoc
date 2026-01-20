@@ -20,7 +20,6 @@ export function useTTS(options: UseTTSOptions = {}): UseTTSReturn {
 
   const [isSpeaking, setIsSpeaking] = useState(false);
 
-  // 컴포넌트 언마운트 시 TTS 중지
   useEffect(() => {
     return () => {
       Speech.stop();
@@ -30,7 +29,6 @@ export function useTTS(options: UseTTSOptions = {}): UseTTSReturn {
   const speak = useCallback(
     async (text: string) => {
       try {
-        // 이미 말하고 있다면 중지
         if (isSpeaking) {
           await Speech.stop();
         }
@@ -43,9 +41,7 @@ export function useTTS(options: UseTTSOptions = {}): UseTTSReturn {
             language: VOICE_CONFIG.language,
             rate: speed,
             pitch: 1.0,
-            onStart: () => {
-              // 이미 setIsSpeaking(true) 호출됨
-            },
+            onStart: () => {},
             onDone: () => {
               setIsSpeaking(false);
               onDone?.();

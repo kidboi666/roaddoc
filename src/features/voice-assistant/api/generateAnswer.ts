@@ -16,9 +16,6 @@ interface GenerateAnswerResult {
   error?: string;
 }
 
-/**
- * GPT-4o-mini를 사용하여 답변 생성
- */
 export async function generateAnswer(options: GenerateAnswerOptions): Promise<GenerateAnswerResult> {
   const { question, previousContext, detailed = false } = options;
 
@@ -26,12 +23,10 @@ export async function generateAnswer(options: GenerateAnswerOptions): Promise<Ge
 
   while (retryCount < OPENAI_CONFIG.retryCount) {
     try {
-      // 메시지 구성
       const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
         { role: 'system', content: SYSTEM_PROMPT },
       ];
 
-      // 이전 대화 컨텍스트 추가 (후속 질문 처리용)
       if (previousContext) {
         messages.push(
           { role: 'user', content: previousContext.question },
@@ -39,10 +34,8 @@ export async function generateAnswer(options: GenerateAnswerOptions): Promise<Ge
         );
       }
 
-      // 현재 질문 추가
       messages.push({ role: 'user', content: question });
 
-      // API 호출
       const response = await openai.chat.completions.create({
         model: OPENAI_CONFIG.model,
         messages,
@@ -76,7 +69,6 @@ export async function generateAnswer(options: GenerateAnswerOptions): Promise<Ge
         };
       }
 
-      // 재시도 전 대기
       await new Promise((resolve) => setTimeout(resolve, 1000 * retryCount));
     }
   }
@@ -88,10 +80,6 @@ export async function generateAnswer(options: GenerateAnswerOptions): Promise<Ge
   };
 }
 
-/**
- * 후속 명령어인지 확인 (더 자세히, 다시 말해 등)
- * GPT가 자연어로 처리하므로 기본적인 키워드만 체크
- */
 export function isFollowUpCommand(text: string): boolean {
   const followUpKeywords = [
     '자세히',

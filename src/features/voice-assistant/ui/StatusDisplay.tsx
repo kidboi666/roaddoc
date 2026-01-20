@@ -14,7 +14,6 @@ export function StatusDisplay({ state, question, answer, error }: StatusDisplayP
   const isDark = colorScheme === 'dark';
   const colors = isDark ? Colors.dark : Colors.light;
 
-  // 상태별 메시지
   const getStatusMessage = () => {
     switch (state) {
       case 'recording':
@@ -32,26 +31,22 @@ export function StatusDisplay({ state, question, answer, error }: StatusDisplayP
 
   return (
     <View style={styles.container}>
-      {/* 상태 메시지 */}
       <Text style={[styles.statusText, { color: colors.text }]}>
         {statusMessage}
       </Text>
 
-      {/* 에러 메시지 */}
       {error && (
         <View style={[styles.messageBox, styles.errorBox]}>
           <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
 
-      {/* 대화 내용 */}
       {(question || answer) && !error && (
         <ScrollView
           style={styles.conversationContainer}
           contentContainerStyle={styles.conversationContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* 질문 */}
           {question && (
             <View
               style={[
@@ -69,7 +64,6 @@ export function StatusDisplay({ state, question, answer, error }: StatusDisplayP
             </View>
           )}
 
-          {/* 답변 */}
           {answer && (
             <View
               style={[

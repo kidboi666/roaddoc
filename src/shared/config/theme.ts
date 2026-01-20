@@ -1,6 +1,4 @@
-// 심플 그레이 테마 색상
 export const Colors = {
-  // 공통 색상
   primary: '#3b82f6',
   error: '#ef4444',
   success: '#22c55e',
@@ -21,5 +19,3 @@ export const Colors = {
     border: '#333333',
   },
 } as const;
-
-export type ColorScheme = 'light' | 'dark';

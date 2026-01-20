@@ -30,7 +30,6 @@ export function useSettings() {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 설정 로드
   useEffect(() => {
     const loadSettings = async () => {
       try {
@@ -67,31 +66,26 @@ export function useSettings() {
     loadSettings();
   }, []);
 
-  // 온보딩 완료 설정
   const setOnboardingCompleted = useCallback(async (value: boolean) => {
     await AsyncStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, String(value));
     setSettings((prev) => ({ ...prev, onboardingCompleted: value }));
   }, []);
 
-  // 면책 조항 동의 설정
   const setDisclaimerAccepted = useCallback(async (value: boolean) => {
     await AsyncStorage.setItem(STORAGE_KEYS.DISCLAIMER_ACCEPTED, String(value));
     setSettings((prev) => ({ ...prev, disclaimerAccepted: value }));
   }, []);
 
-  // TTS 속도 설정
   const setTtsSpeed = useCallback(async (value: number) => {
     await AsyncStorage.setItem(STORAGE_KEYS.TTS_SPEED, String(value));
     setSettings((prev) => ({ ...prev, ttsSpeed: value }));
   }, []);
 
-  // 침묵 감지 시간 설정
   const setSilenceTimeout = useCallback(async (value: number) => {
     await AsyncStorage.setItem(STORAGE_KEYS.SILENCE_TIMEOUT, String(value));
     setSettings((prev) => ({ ...prev, silenceTimeout: value }));
   }, []);
 
-  // 테마 모드 설정
   const setThemeMode = useCallback(async (value: ThemeMode) => {
     await AsyncStorage.setItem(STORAGE_KEYS.THEME_MODE, value);
     setSettings((prev) => ({ ...prev, themeMode: value }));
