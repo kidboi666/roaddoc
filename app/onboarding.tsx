@@ -9,7 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAudioPermission } from 'expo-audio';
+import { requestRecordingPermissionsAsync } from 'expo-audio';
 import { APP_INFO, DISCLAIMER } from '@/shared/config';
 import { useSettings } from '@/shared/hooks';
 
@@ -20,23 +20,18 @@ export default function OnboardingScreen() {
 
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const { setOnboardingCompleted, setDisclaimerAccepted } = useSettings();
-  const [permissionResponse, requestPermission] = useAudioPermission();
 
   const handleStart = async () => {
-    // 마이크 권한 요청
-    if (permissionResponse?.status !== 'granted') {
-      const result = await requestPermission();
-      if (!result.granted) {
-        Alert.alert(
-          '마이크 권한 필요',
-          '음성 질문을 인식하기 위해 마이크 권한이 필요합니다. 설정에서 권한을 허용해주세요.',
-          [{ text: '확인' }]
-        );
-        return;
-      }
+    const result = await requestRecordingPermissionsAsync();
+    if (!result.granted) {
+      Alert.alert(
+        '마이크 권한 필요',
+        '음성 질문을 인식하기 위해 마이크 권한이 필요합니다. 설정에서 권한을 허용해주세요.',
+        [{ text: '확인' }]
+      );
+      return;
     }
 
-    // 면책 조항 팝업 표시
     setShowDisclaimer(true);
   };
 
@@ -44,7 +39,6 @@ export default function OnboardingScreen() {
     setShowDisclaimer(false);
     await setDisclaimerAccepted(true);
     await setOnboardingCompleted(true);
-    // _layout.tsx의 useEffect가 자동으로 홈으로 리다이렉트
   };
 
   const handleDeclineDisclaimer = () => {
@@ -75,7 +69,6 @@ export default function OnboardingScreen() {
         <Text style={styles.buttonText}>시작하기</Text>
       </Pressable>
 
-      {/* 면책 조항 모달 */}
       <Modal
         visible={showDisclaimer}
         transparent
@@ -156,7 +149,6 @@ const createStyles = (isDark: boolean) =>
       fontWeight: '600',
       textAlign: 'center',
     },
-    // Modal styles
     modalOverlay: {
       flex: 1,
       backgroundColor: 'rgba(0, 0, 0, 0.5)',

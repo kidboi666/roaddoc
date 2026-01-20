@@ -1,6 +1,5 @@
 /// <reference types="expo-router/types" />
 
-// 환경 변수 타입
 declare global {
   namespace NodeJS {
     interface ProcessEnv {
