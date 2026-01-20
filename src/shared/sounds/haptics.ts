@@ -1,12 +1,11 @@
-import { useCallback } from 'react';
 import * as Haptics from 'expo-haptics';
 
-export type SoundEffect = 'start' | 'end' | 'processing' | 'error';
+export type HapticType = 'start' | 'end' | 'processing' | 'error';
 
-export function useSoundEffects() {
-  const playSound = useCallback(async (effect: SoundEffect) => {
+export function useHaptics() {
+  const play = async (type: HapticType) => {
     try {
-      switch (effect) {
+      switch (type) {
         case 'start':
           await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           break;
@@ -26,7 +25,7 @@ export function useSoundEffects() {
     } catch {
       console.log('Haptic feedback not available');
     }
-  }, []);
+  };
 
-  return { playSound };
+  return { play };
 }
