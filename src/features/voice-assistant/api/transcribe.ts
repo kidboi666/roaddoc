@@ -1,5 +1,4 @@
-import * as FileSystem from 'expo-file-system';
-import { EncodingType } from 'expo-file-system';
+import { File as ExpoFile } from 'expo-file-system';
 import { openai } from '@/shared/api/openai';
 import { VOICE_CONFIG, OPENAI_CONFIG } from '@/shared/config';
 import { getAudioFileExtension, getAudioMimeType } from '../model/useAudioRecorder';
@@ -18,9 +17,11 @@ export async function transcribeAudio(audioUri: string): Promise<TranscribeResul
 
   while (retryCount < OPENAI_CONFIG.retryCount) {
     try {
-      // 파일 정보 읽기
-      const fileInfo = await FileSystem.getInfoAsync(audioUri);
-      if (!fileInfo.exists) {
+      // expo-file-system File 클래스 사용
+      const expoFile = new ExpoFile(audioUri);
+
+      // 파일 존재 확인
+      if (!expoFile.exists) {
         return {
           text: '',
           success: false,
@@ -29,29 +30,25 @@ export async function transcribeAudio(audioUri: string): Promise<TranscribeResul
       }
 
       // 파일을 base64로 읽기
-      const base64Audio = await FileSystem.readAsStringAsync(audioUri, {
-        encoding: EncodingType.Base64,
-      });
+      const base64Audio = await expoFile.base64();
 
       // base64를 Blob으로 변환
       const audioBlob = base64ToBlob(base64Audio, getAudioMimeType());
 
-      // File 객체 생성
+      // File 객체 생성 (Web API File)
       const audioFile = new File(
         [audioBlob],
         `recording.${getAudioFileExtension()}`,
         { type: getAudioMimeType() }
       );
 
-      // Whisper API 호출
-      const response = await openai.audio.transcriptions.create({
+      // Whisper API 호출 (response_format: 'text'일 때 string으로 반환됨)
+      const text = await openai.audio.transcriptions.create({
         file: audioFile,
         model: 'whisper-1',
         language: VOICE_CONFIG.language.split('-')[0], // 'ko'
         response_format: 'text',
       });
-
-      const text = typeof response === 'string' ? response : response.text;
 
       if (!text || text.trim().length === 0) {
         return {

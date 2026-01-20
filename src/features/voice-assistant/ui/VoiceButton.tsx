@@ -7,7 +7,7 @@ import {
   useColorScheme,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS } from '@/shared/config';
+import { Colors } from '@/shared/config';
 
 interface VoiceButtonProps {
   state: 'idle' | 'recording' | 'processing' | 'speaking';
@@ -24,6 +24,7 @@ export function VoiceButton({
 }: VoiceButtonProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const colors = isDark ? Colors.dark : Colors.light;
 
   // 애니메이션 값
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -79,21 +80,13 @@ export function VoiceButton({
   const getButtonStyle = () => {
     switch (state) {
       case 'recording':
-        return {
-          backgroundColor: COLORS.error,
-        };
+        return { backgroundColor: Colors.error };
       case 'processing':
-        return {
-          backgroundColor: isDark ? COLORS.darkCard : COLORS.lightCard,
-        };
+        return { backgroundColor: colors.card };
       case 'speaking':
-        return {
-          backgroundColor: COLORS.success,
-        };
+        return { backgroundColor: Colors.success };
       default:
-        return {
-          backgroundColor: COLORS.primary,
-        };
+        return { backgroundColor: Colors.primary };
     }
   };
 
@@ -123,7 +116,7 @@ export function VoiceButton({
             styles.pulseRing,
             {
               transform: [{ scale: pulseAnim }],
-              backgroundColor: COLORS.error + '30',
+              backgroundColor: Colors.error + '30',
             },
           ]}
         />

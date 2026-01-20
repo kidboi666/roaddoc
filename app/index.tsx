@@ -2,7 +2,7 @@ import { StyleSheet, Pressable, View, Text, useColorScheme } from 'react-native'
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { APP_INFO, COLORS } from '@/shared/config';
+import { APP_INFO, Colors } from '@/shared/config';
 import { useVoiceAssistant } from '@/features/voice-assistant/model/useVoiceAssistant';
 import { VoiceButton } from '@/features/voice-assistant/ui/VoiceButton';
 import { StatusDisplay } from '@/features/voice-assistant/ui/StatusDisplay';
@@ -11,6 +11,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const colors = isDark ? Colors.dark : Colors.light;
 
   const {
     state,
@@ -41,12 +42,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView
-      style={[
-        styles.container,
-        { backgroundColor: isDark ? COLORS.darkBackground : COLORS.lightBackground },
-      ]}
-    >
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* 헤더 */}
       <View style={styles.header}>
         <Pressable
@@ -56,26 +52,16 @@ export default function HomeScreen() {
           <Ionicons
             name="settings-outline"
             size={24}
-            color={isDark ? COLORS.darkText : COLORS.lightText}
+            color={colors.text}
           />
         </Pressable>
-        <Text
-          style={[
-            styles.title,
-            { color: isDark ? COLORS.darkText : COLORS.lightText },
-          ]}
-        >
+        <Text style={[styles.title, { color: colors.text }]}>
           {APP_INFO.name}
         </Text>
       </View>
 
       {/* 대화 영역 */}
-      <View
-        style={[
-          styles.conversationArea,
-          { backgroundColor: isDark ? COLORS.darkCard : COLORS.lightCard },
-        ]}
-      >
+      <View style={[styles.conversationArea, { backgroundColor: colors.card }]}>
         <StatusDisplay
           state={state}
           question={currentQuestion}
@@ -91,12 +77,7 @@ export default function HomeScreen() {
           onPress={handlePress}
           onLongPress={handleLongPress}
         />
-        <Text
-          style={[
-            styles.hint,
-            { color: isDark ? COLORS.darkTextSecondary : COLORS.lightTextSecondary },
-          ]}
-        >
+        <Text style={[styles.hint, { color: colors.textSecondary }]}>
           {state === 'idle'
             ? '탭해서 질문하세요'
             : state === 'recording'

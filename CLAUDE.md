@@ -78,6 +78,11 @@ EXPO_PUBLIC_OPENAI_API_KEY=sk-xxxx
 - AI 작업 정보 (Co-authored-by 등) 포함 금지
 - 예시: `Feat: 음성 녹음 기능 구현`, `Fix: TTS 재생 오류 수정`
 
+## Code Convention
+
+- 코드에 주석 작성 금지 (self-documenting code 지향)
+- 변수명, 함수명으로 의도를 명확하게 표현
+
 ## Important Specs
 
 - Refer to `docs/roaddoc-spec.md` for complete MVP specifications

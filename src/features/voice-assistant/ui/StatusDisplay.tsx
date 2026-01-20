@@ -12,6 +12,7 @@ interface StatusDisplayProps {
 export function StatusDisplay({ state, question, answer, error }: StatusDisplayProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const colors = isDark ? Colors.dark : Colors.light;
 
   // 상태별 메시지
   const getStatusMessage = () => {
@@ -32,12 +33,7 @@ export function StatusDisplay({ state, question, answer, error }: StatusDisplayP
   return (
     <View style={styles.container}>
       {/* 상태 메시지 */}
-      <Text
-        style={[
-          styles.statusText,
-          { color: isDark ? Colors.darkText : Colors.lightText },
-        ]}
-      >
+      <Text style={[styles.statusText, { color: colors.text }]}>
         {statusMessage}
       </Text>
 
@@ -61,23 +57,13 @@ export function StatusDisplay({ state, question, answer, error }: StatusDisplayP
               style={[
                 styles.messageBox,
                 styles.questionBox,
-                { backgroundColor: isDark ? COLORS.darkCard : COLORS.lightCard },
+                { backgroundColor: colors.card },
               ]}
             >
-              <Text
-                style={[
-                  styles.messageLabel,
-                  { color: isDark ? COLORS.darkTextSecondary : COLORS.lightTextSecondary },
-                ]}
-              >
+              <Text style={[styles.messageLabel, { color: colors.textSecondary }]}>
                 질문
               </Text>
-              <Text
-                style={[
-                  styles.messageText,
-                  { color: isDark ? COLORS.darkText : COLORS.lightText },
-                ]}
-              >
+              <Text style={[styles.messageText, { color: colors.text }]}>
                 {question}
               </Text>
             </View>
@@ -89,18 +75,13 @@ export function StatusDisplay({ state, question, answer, error }: StatusDisplayP
               style={[
                 styles.messageBox,
                 styles.answerBox,
-                { backgroundColor: COLORS.primary + '15' },
+                { backgroundColor: Colors.primary + '15' },
               ]}
             >
-              <Text style={[styles.messageLabel, { color: COLORS.primary }]}>
+              <Text style={[styles.messageLabel, { color: Colors.primary }]}>
                 답변
               </Text>
-              <Text
-                style={[
-                  styles.messageText,
-                  { color: isDark ? COLORS.darkText : COLORS.lightText },
-                ]}
-              >
+              <Text style={[styles.messageText, { color: colors.text }]}>
                 {answer}
               </Text>
             </View>
@@ -137,7 +118,7 @@ const styles = StyleSheet.create({
   questionBox: {},
   answerBox: {},
   errorBox: {
-    backgroundColor: COLORS.error + '15',
+    backgroundColor: Colors.error + '15',
   },
   messageLabel: {
     fontSize: 12,
@@ -151,7 +132,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 14,
-    color: COLORS.error,
+    color: Colors.error,
     textAlign: 'center',
   },
 });
