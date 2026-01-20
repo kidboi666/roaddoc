@@ -64,6 +64,20 @@ src/
 EXPO_PUBLIC_OPENAI_API_KEY=sk-xxxx
 ```
 
+## Git Convention
+
+### Branch Strategy
+- GitHub Flow with feature branches
+- Format: `{type}/{branch-name}`
+- Types: `feat`, `fix`, `chore`, `refactor`, `docs`
+
+### Commit Message
+- 한 줄로 작성 (하단 리스트업 금지)
+- 첫 글자 대문자
+- Format: `{Type}: 설명`
+- AI 작업 정보 (Co-authored-by 등) 포함 금지
+- 예시: `Feat: 음성 녹음 기능 구현`, `Fix: TTS 재생 오류 수정`
+
 ## Important Specs
 
 - Refer to `docs/roaddoc-spec.md` for complete MVP specifications
