@@ -9,7 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAudioPermission } from 'expo-audio';
+import { requestRecordingPermissionsAsync } from 'expo-audio';
 import { APP_INFO, DISCLAIMER } from '@/shared/config';
 import { useSettings } from '@/shared/hooks';
 
@@ -20,20 +20,17 @@ export default function OnboardingScreen() {
 
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const { setOnboardingCompleted, setDisclaimerAccepted } = useSettings();
-  const [permissionResponse, requestPermission] = useAudioPermission();
 
   const handleStart = async () => {
     // 마이크 권한 요청
-    if (permissionResponse?.status !== 'granted') {
-      const result = await requestPermission();
-      if (!result.granted) {
-        Alert.alert(
-          '마이크 권한 필요',
-          '음성 질문을 인식하기 위해 마이크 권한이 필요합니다. 설정에서 권한을 허용해주세요.',
-          [{ text: '확인' }]
-        );
-        return;
-      }
+    const result = await requestRecordingPermissionsAsync();
+    if (!result.granted) {
+      Alert.alert(
+        '마이크 권한 필요',
+        '음성 질문을 인식하기 위해 마이크 권한이 필요합니다. 설정에서 권한을 허용해주세요.',
+        [{ text: '확인' }]
+      );
+      return;
     }
 
     // 면책 조항 팝업 표시
