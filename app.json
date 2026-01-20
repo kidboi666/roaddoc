@@ -1,25 +1,31 @@
 {
   "expo": {
-    "name": "roaddoc",
+    "name": "로드닥",
     "slug": "roaddoc",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "roaddoc",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.logmind.roaddoc",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "음성 질문을 인식하기 위해 마이크 권한이 필요합니다."
+      }
     },
     "android": {
+      "package": "com.logmind.roaddoc",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#f5f5f5",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": ["RECORD_AUDIO"]
     },
     "web": {
       "output": "static",
@@ -38,7 +44,8 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-audio"
     ],
     "experiments": {
       "typedRoutes": true,
