@@ -1,9 +1,42 @@
-import { Stack } from 'expo-router';
+import { useEffect } from 'react';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useColorScheme } from 'react-native';
+import { useColorScheme, View, ActivityIndicator } from 'react-native';
+import { useSettings } from '@/shared/hooks';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const router = useRouter();
+  const segments = useSegments();
+  const { settings, isLoading } = useSettings();
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    const inOnboarding = segments[0] === 'onboarding';
+    const needsOnboarding = !settings.onboardingCompleted || !settings.disclaimerAccepted;
+
+    if (needsOnboarding && !inOnboarding) {
+      router.replace('/onboarding');
+    } else if (!needsOnboarding && inOnboarding) {
+      router.replace('/');
+    }
+  }, [isLoading, settings.onboardingCompleted, settings.disclaimerAccepted, segments, router]);
+
+  if (isLoading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: colorScheme === 'dark' ? '#121212' : '#f5f5f5',
+        }}
+      >
+        <ActivityIndicator size="large" color={colorScheme === 'dark' ? '#fff' : '#333'} />
+      </View>
+    );
+  }
 
   return (
     <>
