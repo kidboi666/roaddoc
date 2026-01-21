@@ -41,8 +41,10 @@
 
 | 영역 | 기술 | 용도 |
 |------|------|------|
-| 프레임워크 | Expo (~52.0.0) | 앱 기본 구조 |
+| 프레임워크 | Expo (~54.0.0) | 앱 기본 구조 |
 | 라우팅 | Expo Router (~4.0.0) | 화면 네비게이션 |
+| UI 라이브러리 | gluestack-ui v3 | 모던 UI 컴포넌트 |
+| 스타일링 | NativeWind (Tailwind CSS) | 유틸리티 기반 스타일링 |
 | 오디오 녹음 | expo-audio | 음성 녹음 |
 | STT | OpenAI Whisper API | 음성 → 텍스트 |
 | TTS | expo-speech (~13.0.0) | 텍스트 → 음성 (디바이스 기본 TTS) |
@@ -56,13 +58,15 @@
 ```json
 {
   "dependencies": {
-    "expo": "~52.0.0",
+    "expo": "~54.0.0",
     "expo-router": "~4.0.0",
-    "expo-audio": "~0.3.0",
+    "expo-audio": "~1.1.1",
     "expo-speech": "~13.0.0",
     "openai": "^4.50.0",
     "zustand": "^4.5.0",
-    "@react-native-async-storage/async-storage": "^2.1.0"
+    "@react-native-async-storage/async-storage": "^2.1.0",
+    "nativewind": "^4.0.0",
+    "tailwindcss": "^3.4.0"
   }
 }
 ```
@@ -467,40 +471,62 @@ EXPO_PUBLIC_OPENAI_API_KEY=sk-xxxx
 ## 개발 순서
 
 ### Phase 1: 프로젝트 셋업
-- [ ] Expo 프로젝트 생성
-- [ ] 패키지 설치
-- [ ] 폴더 구조 세팅
-- [ ] 기본 UI 레이아웃 (심플 그레이 테마)
-- [ ] 다크 모드 지원 (시스템 설정 따름)
+- [x] Expo 프로젝트 생성
+- [x] 패키지 설치
+- [x] 폴더 구조 세팅
+- [x] 기본 UI 레이아웃 (심플 그레이 테마)
+- [x] 다크 모드 지원 (시스템 설정 따름)
 
 ### Phase 2: 온보딩 & 설정
-- [ ] 온보딩 화면 구현
-- [ ] 마이크 권한 요청 플로우
-- [ ] 면책 조항 팝업
-- [ ] 설정 화면 구현 (TTS 속도, 침묵 시간, 다크모드)
+- [x] 온보딩 화면 구현
+- [x] 마이크 권한 요청 플로우
+- [x] 면책 조항 팝업
+- [x] 설정 화면 구현 (TTS 속도, 침묵 시간, 다크모드)
 
 ### Phase 3: 음성 기능
-- [ ] expo-audio로 녹음 구현
-- [ ] 침묵 감지 로직 (1.5초 기본)
-- [ ] 플랫폼별 오디오 포맷 처리
-- [ ] Whisper API 연동
-- [ ] TTS 구현 (expo-speech)
-- [ ] 효과음 구현
+- [x] expo-audio로 녹음 구현
+- [x] 침묵 감지 로직 (1.5초 기본)
+- [x] 플랫폼별 오디오 포맷 처리
+- [x] Whisper API 연동
+- [x] TTS 구현 (expo-speech)
+- [x] 효과음 구현 (햅틱 피드백으로 대체)
 
 ### Phase 4: AI 연동
-- [ ] OpenAI 클라이언트 설정
-- [ ] 시스템 프롬프트 적용
-- [ ] GPT-4o-mini API 호출
-- [ ] 후속 명령어 처리 (자연어)
-- [ ] 에러 처리 (3회 재시도)
+- [x] OpenAI 클라이언트 설정
+- [x] 시스템 프롬프트 적용
+- [x] GPT-4o-mini API 호출
+- [x] 후속 명령어 처리 (자연어)
+- [x] 에러 처리 (3회 재시도)
 
 ### Phase 5: 통합 및 테스트
-- [ ] 전체 플로우 연결
-- [ ] Zustand 상태 관리 통합
-- [ ] 에러 처리 완성
-- [ ] UI 다듬기
+- [x] 전체 플로우 연결
+- [x] Zustand 상태 관리 통합
+- [x] 에러 처리 완성
+- [x] UI 다듬기
 - [ ] iOS 실기기 테스트
 - [ ] Android 실기기 테스트
+
+### Phase 6: UI 현대화 (NativeWind/Tailwind CSS + gluestack-ui v3)
+- [x] NativeWind 설치 및 초기 설정
+  - [x] NativeWind (Tailwind CSS) 설정
+  - [x] 테마 설정 (다크모드 연동)
+- [x] 화면별 마이그레이션
+  - [x] 온보딩 화면 (onboarding.tsx)
+  - [x] 홈 화면 (index.tsx)
+  - [x] 설정 화면 (settings.tsx)
+- [x] 커스텀 컴포넌트 리팩토링
+  - [x] VoiceButton 컴포넌트
+  - [x] StatusDisplay 컴포넌트
+- [x] 애니메이션 개선
+  - [x] 화면 전환 애니메이션
+  - [x] 마이크로 인터랙션
+- [x] gluestack-ui v3 스타일 컴포넌트 구축
+  - [x] GluestackUIProvider
+  - [x] Button 컴포넌트 (variants: solid, outline, ghost, link)
+  - [x] Card 컴포넌트 (variants: elevated, outline, ghost, filled)
+  - [x] Modal 컴포넌트 (ModalContent, ModalHeader, ModalBody, ModalFooter)
+  - [x] Actionsheet 컴포넌트 (바텀시트 스타일)
+  - [x] Box, Text 컴포넌트
 
 ---
 
@@ -517,7 +543,7 @@ EXPO_PUBLIC_OPENAI_API_KEY=sk-xxxx
 - [ ] Whisper API 호출 성공
 - [ ] GPT 답변 수신
 - [ ] TTS 재생
-- [ ] 효과음 재생
+- [ ] 햅틱 피드백 동작
 - [ ] 후속 명령어 처리 ("더 자세히", "다시 말해")
 - [ ] 네트워크 오류 시 재시도
 - [ ] 설정 변경 반영

@@ -2,7 +2,7 @@ import { useCallback, useRef, useEffect } from 'react';
 import { useVoiceStore } from './voiceStore';
 import { useAudioRecorder } from './useAudioRecorder';
 import { useTTS } from './useTTS';
-import { useSoundEffects } from '@/shared/sounds/effects';
+import { useHaptics } from '@/shared/sounds/haptics';
 import { transcribeAudio } from '../api/transcribe';
 import { generateAnswer, isFollowUpCommand } from '../api/generateAnswer';
 import { useSettings } from '@/shared/hooks/useSettings';
@@ -21,7 +21,7 @@ interface UseVoiceAssistantReturn {
 
 export function useVoiceAssistant(): UseVoiceAssistantReturn {
   const { settings } = useSettings();
-  const { playSound } = useSoundEffects();
+  const { play: playHaptic } = useHaptics();
 
   const {
     state,
@@ -81,12 +81,12 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
       }
 
       setState('processing');
-      await playSound('processing');
+      await playHaptic('processing');
 
       const transcriptionResult = await transcribeAudio(audioUri);
       if (!transcriptionResult.success) {
         setError(transcriptionResult.error || '음성 인식에 실패했습니다.');
-        await playSound('error');
+        await playHaptic('error');
         setState('idle');
         isProcessingRef.current = false;
         return;
@@ -106,7 +106,7 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
 
       if (!answerResult.success) {
         setError(answerResult.error || '답변 생성에 실패했습니다.');
-        await playSound('error');
+        await playHaptic('error');
         setState('idle');
         isProcessingRef.current = false;
         return;
@@ -121,14 +121,14 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
     } catch (err) {
       console.error('Voice assistant error:', err);
       setError('처리 중 오류가 발생했습니다.');
-      await playSound('error');
+      await playHaptic('error');
       setState('idle');
     } finally {
       isProcessingRef.current = false;
     }
   }, [
     stopRecording,
-    playSound,
+    playHaptic,
     setError,
     setState,
     setCurrentQuestion,
@@ -146,22 +146,22 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
     try {
       reset();
       setState('recording');
-      await playSound('start');
+      await playHaptic('start');
       await startRecording();
     } catch (err) {
       console.error('Failed to start listening:', err);
       setError('마이크를 시작할 수 없습니다.');
-      await playSound('error');
+      await playHaptic('error');
       setState('idle');
     }
-  }, [reset, setState, playSound, startRecording, setError]);
+  }, [reset, setState, playHaptic, startRecording, setError]);
 
   const stopListening = useCallback(async () => {
     if (state !== 'recording') return;
 
-    await playSound('end');
+    await playHaptic('end');
     await processRecording();
-  }, [state, playSound, processRecording]);
+  }, [state, playHaptic, processRecording]);
 
   const cancel = useCallback(async () => {
     if (isSpeaking) {

@@ -33,6 +33,11 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}): UseAudi
 
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSoundTimeRef = useRef<number>(Date.now());
+  const recordingStartTimeRef = useRef<number>(0);
+  const hasPassedGracePeriodRef = useRef(false);
+  const GRACE_PERIOD = 1500;
+  const MIN_RECORDING_DURATION = 2000;
+  const SILENCE_THRESHOLD = -40;
 
   const clearSilenceTimer = useCallback(() => {
     if (silenceTimerRef.current) {
@@ -44,16 +49,36 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}): UseAudi
   useEffect(() => {
     if (!isRecording || !recorderState) return;
 
+    const now = Date.now();
+    const timeSinceStart = now - recordingStartTimeRef.current;
+
+    if (timeSinceStart < GRACE_PERIOD) return;
+
+    if (!hasPassedGracePeriodRef.current) {
+      hasPassedGracePeriodRef.current = true;
+      lastSoundTimeRef.current = now;
+    }
+
     const currentLevel = recorderState.metering ?? -160;
-    const SILENCE_THRESHOLD = -40;
+
+    if (__DEV__) {
+      console.log(`[Audio] metering: ${currentLevel.toFixed(1)}, duration: ${timeSinceStart}ms`);
+    }
 
     if (currentLevel > SILENCE_THRESHOLD) {
-      lastSoundTimeRef.current = Date.now();
+      lastSoundTimeRef.current = now;
       clearSilenceTimer();
     } else {
-      const silentDuration = Date.now() - lastSoundTimeRef.current;
+      const silentDuration = now - lastSoundTimeRef.current;
+
+      if (timeSinceStart < MIN_RECORDING_DURATION) {
+        return;
+      }
 
       if (silentDuration >= silenceTimeout && !silenceTimerRef.current) {
+        if (__DEV__) {
+          console.log(`[Audio] Silence detected after ${timeSinceStart}ms, triggering stop`);
+        }
         silenceTimerRef.current = setTimeout(() => {
           if (isRecording && onSilenceDetected) {
             onSilenceDetected();
@@ -67,35 +92,51 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}): UseAudi
     try {
       await AudioModule.setAudioModeAsync({
         playsInSilentMode: true,
-        shouldRouteThroughEarpiece: false,
+        allowsRecording: true,
       });
 
+      const now = Date.now();
+      recordingStartTimeRef.current = now;
+      lastSoundTimeRef.current = now;
+      hasPassedGracePeriodRef.current = false;
+      clearSilenceTimer();
+
+      await audioRecorder.prepareToRecordAsync();
       audioRecorder.record();
       setIsRecording(true);
-      lastSoundTimeRef.current = Date.now();
+
+      if (__DEV__) {
+        console.log('[Audio] Recording started');
+      }
     } catch (error) {
       console.error('Failed to start recording:', error);
       setIsRecording(false);
       throw error;
     }
-  }, [audioRecorder]);
+  }, [audioRecorder, clearSilenceTimer]);
 
   const stopRecording = useCallback(async (): Promise<string | null> => {
     try {
       clearSilenceTimer();
+      setIsRecording(false);
 
       if (!audioRecorder.isRecording) {
-        setIsRecording(false);
+        if (__DEV__) {
+          console.log('[Audio] Recorder was not recording');
+        }
         return null;
       }
 
-      const uri = await audioRecorder.stop();
-      setIsRecording(false);
+      await audioRecorder.stop();
+      const uri = audioRecorder.uri;
+
+      if (__DEV__) {
+        console.log('[Audio] Recording stopped, URI:', uri);
+      }
 
       return uri ?? null;
     } catch (error) {
       console.error('Failed to stop recording:', error);
-      setIsRecording(false);
       return null;
     }
   }, [audioRecorder, clearSilenceTimer]);
@@ -103,15 +144,17 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}): UseAudi
   const cancelRecording = useCallback(async () => {
     try {
       clearSilenceTimer();
+      setIsRecording(false);
 
       if (audioRecorder.isRecording) {
         await audioRecorder.stop();
       }
 
-      setIsRecording(false);
+      if (__DEV__) {
+        console.log('[Audio] Recording cancelled');
+      }
     } catch (error) {
       console.error('Failed to cancel recording:', error);
-      setIsRecording(false);
     }
   }, [audioRecorder, clearSilenceTimer]);
 

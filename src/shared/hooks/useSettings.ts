@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect } from 'react';
+import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { VOICE_CONFIG, type ThemeMode } from '@/shared/config';
 
@@ -18,6 +19,18 @@ export interface Settings {
   themeMode: ThemeMode;
 }
 
+interface SettingsState {
+  settings: Settings;
+  isLoading: boolean;
+  isInitialized: boolean;
+  loadSettings: () => Promise<void>;
+  setOnboardingCompleted: (value: boolean) => Promise<void>;
+  setDisclaimerAccepted: (value: boolean) => Promise<void>;
+  setTtsSpeed: (value: number) => Promise<void>;
+  setSilenceTimeout: (value: number) => Promise<void>;
+  setThemeMode: (value: ThemeMode) => Promise<void>;
+}
+
 const DEFAULT_SETTINGS: Settings = {
   onboardingCompleted: false,
   disclaimerAccepted: false,
@@ -26,28 +39,31 @@ const DEFAULT_SETTINGS: Settings = {
   themeMode: 'system',
 };
 
-export function useSettings() {
-  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
-  const [isLoading, setIsLoading] = useState(true);
+const useSettingsStore = create<SettingsState>((set, get) => ({
+  settings: DEFAULT_SETTINGS,
+  isLoading: true,
+  isInitialized: false,
 
-  useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const [
-          onboardingCompleted,
-          disclaimerAccepted,
-          ttsSpeed,
-          silenceTimeout,
-          themeMode,
-        ] = await Promise.all([
-          AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED),
-          AsyncStorage.getItem(STORAGE_KEYS.DISCLAIMER_ACCEPTED),
-          AsyncStorage.getItem(STORAGE_KEYS.TTS_SPEED),
-          AsyncStorage.getItem(STORAGE_KEYS.SILENCE_TIMEOUT),
-          AsyncStorage.getItem(STORAGE_KEYS.THEME_MODE),
-        ]);
+  loadSettings: async () => {
+    if (get().isInitialized) return;
 
-        setSettings({
+    try {
+      const [
+        onboardingCompleted,
+        disclaimerAccepted,
+        ttsSpeed,
+        silenceTimeout,
+        themeMode,
+      ] = await Promise.all([
+        AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED),
+        AsyncStorage.getItem(STORAGE_KEYS.DISCLAIMER_ACCEPTED),
+        AsyncStorage.getItem(STORAGE_KEYS.TTS_SPEED),
+        AsyncStorage.getItem(STORAGE_KEYS.SILENCE_TIMEOUT),
+        AsyncStorage.getItem(STORAGE_KEYS.THEME_MODE),
+      ]);
+
+      set({
+        settings: {
           onboardingCompleted: onboardingCompleted === 'true',
           disclaimerAccepted: disclaimerAccepted === 'true',
           ttsSpeed: ttsSpeed ? parseFloat(ttsSpeed) : DEFAULT_SETTINGS.ttsSpeed,
@@ -55,49 +71,66 @@ export function useSettings() {
             ? parseInt(silenceTimeout, 10)
             : DEFAULT_SETTINGS.silenceTimeout,
           themeMode: (themeMode as ThemeMode) || DEFAULT_SETTINGS.themeMode,
-        });
-      } catch (error) {
-        console.error('Failed to load settings:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+        },
+        isLoading: false,
+        isInitialized: true,
+      });
+    } catch (error) {
+      console.error('Failed to load settings:', error);
+      set({ isLoading: false, isInitialized: true });
+    }
+  },
 
-    loadSettings();
-  }, []);
-
-  const setOnboardingCompleted = useCallback(async (value: boolean) => {
+  setOnboardingCompleted: async (value: boolean) => {
     await AsyncStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, String(value));
-    setSettings((prev) => ({ ...prev, onboardingCompleted: value }));
-  }, []);
+    set((state) => ({
+      settings: { ...state.settings, onboardingCompleted: value },
+    }));
+  },
 
-  const setDisclaimerAccepted = useCallback(async (value: boolean) => {
+  setDisclaimerAccepted: async (value: boolean) => {
     await AsyncStorage.setItem(STORAGE_KEYS.DISCLAIMER_ACCEPTED, String(value));
-    setSettings((prev) => ({ ...prev, disclaimerAccepted: value }));
-  }, []);
+    set((state) => ({
+      settings: { ...state.settings, disclaimerAccepted: value },
+    }));
+  },
 
-  const setTtsSpeed = useCallback(async (value: number) => {
+  setTtsSpeed: async (value: number) => {
     await AsyncStorage.setItem(STORAGE_KEYS.TTS_SPEED, String(value));
-    setSettings((prev) => ({ ...prev, ttsSpeed: value }));
-  }, []);
+    set((state) => ({
+      settings: { ...state.settings, ttsSpeed: value },
+    }));
+  },
 
-  const setSilenceTimeout = useCallback(async (value: number) => {
+  setSilenceTimeout: async (value: number) => {
     await AsyncStorage.setItem(STORAGE_KEYS.SILENCE_TIMEOUT, String(value));
-    setSettings((prev) => ({ ...prev, silenceTimeout: value }));
-  }, []);
+    set((state) => ({
+      settings: { ...state.settings, silenceTimeout: value },
+    }));
+  },
 
-  const setThemeMode = useCallback(async (value: ThemeMode) => {
+  setThemeMode: async (value: ThemeMode) => {
     await AsyncStorage.setItem(STORAGE_KEYS.THEME_MODE, value);
-    setSettings((prev) => ({ ...prev, themeMode: value }));
+    set((state) => ({
+      settings: { ...state.settings, themeMode: value },
+    }));
+  },
+}));
+
+export function useSettings() {
+  const store = useSettingsStore();
+
+  useEffect(() => {
+    store.loadSettings();
   }, []);
 
   return {
-    settings,
-    isLoading,
-    setOnboardingCompleted,
-    setDisclaimerAccepted,
-    setTtsSpeed,
-    setSilenceTimeout,
-    setThemeMode,
+    settings: store.settings,
+    isLoading: store.isLoading,
+    setOnboardingCompleted: store.setOnboardingCompleted,
+    setDisclaimerAccepted: store.setDisclaimerAccepted,
+    setTtsSpeed: store.setTtsSpeed,
+    setSilenceTimeout: store.setSilenceTimeout,
+    setThemeMode: store.setThemeMode,
   };
 }

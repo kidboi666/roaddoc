@@ -1,25 +1,55 @@
-import { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  useColorScheme,
-  Modal,
-  Alert,
-} from 'react-native';
+import { useState, useRef, useEffect } from 'react';
+import { View, Text, Pressable, Alert, Animated, Easing } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { requestRecordingPermissionsAsync } from 'expo-audio';
 import { APP_INFO, DISCLAIMER } from '@/shared/config';
 import { useSettings } from '@/shared/hooks';
+import {
+  Button,
+  ButtonText,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Heading,
+  Card,
+} from '@/shared/ui';
 
 export default function OnboardingScreen() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const styles = createStyles(isDark);
-
+  const router = useRouter();
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const { setOnboardingCompleted, setDisclaimerAccepted } = useSettings();
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const buttonAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 600,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 600,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.timing(buttonAnim, {
+        toValue: 1,
+        duration: 400,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [fadeAnim, slideAnim, buttonAnim]);
 
   const handleStart = async () => {
     const result = await requestRecordingPermissionsAsync();
@@ -31,7 +61,6 @@ export default function OnboardingScreen() {
       );
       return;
     }
-
     setShowDisclaimer(true);
   };
 
@@ -39,6 +68,7 @@ export default function OnboardingScreen() {
     setShowDisclaimer(false);
     await setDisclaimerAccepted(true);
     await setOnboardingCompleted(true);
+    router.replace('/');
   };
 
   const handleDeclineDisclaimer = () => {
@@ -51,155 +81,87 @@ export default function OnboardingScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.emoji}>🚗</Text>
-        <Text style={styles.title}>{APP_INFO.name}</Text>
-        <Text style={styles.slogan}>{APP_INFO.slogan}</Text>
+    <SafeAreaView className="flex-1 bg-neutral-50 dark:bg-neutral-900 px-6">
+      <Animated.View
+        className="flex-1 justify-center items-center"
+        style={{
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }],
+        }}
+      >
+        <View className="w-24 h-24 rounded-3xl bg-blue-500 items-center justify-center mb-8 shadow-lg">
+          <Text className="text-5xl">🚗</Text>
+        </View>
 
-        <View style={styles.description}>
-          <Text style={styles.descriptionText}>
+        <Text className="text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">
+          {APP_INFO.name}
+        </Text>
+        <Text className="text-lg text-neutral-400 dark:text-neutral-500 mb-16">
+          {APP_INFO.slogan}
+        </Text>
+
+        <Card variant="filled" size="lg" className="items-center">
+          <Text className="text-base text-neutral-600 dark:text-neutral-300 text-center leading-7">
             운전 중 궁금한 도로교통법{'\n'}
             음성으로 물어보세요
           </Text>
-        </View>
-      </View>
+        </Card>
+      </Animated.View>
 
-      <Pressable style={styles.button} onPress={handleStart}>
-        <Text style={styles.buttonText}>시작하기</Text>
-      </Pressable>
+      <Animated.View style={{ opacity: buttonAnim }} className="mb-8">
+        <Button
+          variant="solid"
+          size="lg"
+          action="primary"
+          onPress={handleStart}
+          className="w-full"
+        >
+          <ButtonText size="lg">시작하기</ButtonText>
+        </Button>
+      </Animated.View>
 
       <Modal
-        visible={showDisclaimer}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowDisclaimer(false)}
+        isOpen={showDisclaimer}
+        onClose={() => setShowDisclaimer(false)}
+        size="md"
+        closeOnOverlayClick={false}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>이용 안내</Text>
-            <Text style={styles.modalText}>{DISCLAIMER}</Text>
-
-            <View style={styles.modalButtons}>
-              <Pressable
-                style={[styles.modalButton, styles.modalButtonSecondary]}
-                onPress={handleDeclineDisclaimer}
-              >
-                <Text style={styles.modalButtonTextSecondary}>취소</Text>
-              </Pressable>
-              <Pressable
-                style={[styles.modalButton, styles.modalButtonPrimary]}
-                onPress={handleAcceptDisclaimer}
-              >
-                <Text style={styles.modalButtonTextPrimary}>동의</Text>
-              </Pressable>
-            </View>
+        <ModalContent>
+          <View className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 items-center justify-center self-center mb-4">
+            <Text className="text-2xl">📋</Text>
           </View>
-        </View>
+
+          <ModalHeader className="items-center">
+            <Heading size="xl">이용 안내</Heading>
+          </ModalHeader>
+
+          <ModalBody>
+            <Text className="text-sm text-neutral-500 dark:text-neutral-400 leading-6">
+              {DISCLAIMER}
+            </Text>
+          </ModalBody>
+
+          <ModalFooter className="flex-col gap-3">
+            <Button
+              variant="solid"
+              size="lg"
+              action="primary"
+              onPress={handleAcceptDisclaimer}
+              className="w-full"
+            >
+              <ButtonText size="md">동의하고 시작하기</ButtonText>
+            </Button>
+            <Pressable
+              className="py-3 items-center active:opacity-70"
+              onPress={handleDeclineDisclaimer}
+            >
+              <Text className="text-base text-neutral-400 dark:text-neutral-500">
+                취소
+              </Text>
+            </Pressable>
+          </ModalFooter>
+        </ModalContent>
       </Modal>
     </SafeAreaView>
   );
 }
-
-const createStyles = (isDark: boolean) =>
-  StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: isDark ? '#121212' : '#f5f5f5',
-      paddingHorizontal: 24,
-    },
-    content: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    emoji: {
-      fontSize: 64,
-      marginBottom: 16,
-    },
-    title: {
-      fontSize: 32,
-      fontWeight: '700',
-      color: isDark ? '#f5f5f5' : '#1a1a1a',
-      marginBottom: 8,
-    },
-    slogan: {
-      fontSize: 18,
-      color: isDark ? '#a0a0a0' : '#666666',
-      marginBottom: 48,
-    },
-    description: {
-      alignItems: 'center',
-    },
-    descriptionText: {
-      fontSize: 16,
-      color: isDark ? '#a0a0a0' : '#666666',
-      textAlign: 'center',
-      lineHeight: 24,
-    },
-    button: {
-      backgroundColor: isDark ? '#333333' : '#1a1a1a',
-      paddingVertical: 16,
-      borderRadius: 12,
-      marginBottom: 32,
-    },
-    buttonText: {
-      color: '#ffffff',
-      fontSize: 18,
-      fontWeight: '600',
-      textAlign: 'center',
-    },
-    modalOverlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 24,
-    },
-    modalContent: {
-      backgroundColor: isDark ? '#1e1e1e' : '#ffffff',
-      borderRadius: 16,
-      padding: 24,
-      width: '100%',
-      maxWidth: 400,
-    },
-    modalTitle: {
-      fontSize: 20,
-      fontWeight: '600',
-      color: isDark ? '#f5f5f5' : '#1a1a1a',
-      marginBottom: 16,
-      textAlign: 'center',
-    },
-    modalText: {
-      fontSize: 14,
-      color: isDark ? '#a0a0a0' : '#666666',
-      lineHeight: 22,
-      marginBottom: 24,
-    },
-    modalButtons: {
-      flexDirection: 'row',
-      gap: 12,
-    },
-    modalButton: {
-      flex: 1,
-      paddingVertical: 14,
-      borderRadius: 10,
-      alignItems: 'center',
-    },
-    modalButtonSecondary: {
-      backgroundColor: isDark ? '#333333' : '#e0e0e0',
-    },
-    modalButtonPrimary: {
-      backgroundColor: isDark ? '#f5f5f5' : '#1a1a1a',
-    },
-    modalButtonTextSecondary: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: isDark ? '#a0a0a0' : '#666666',
-    },
-    modalButtonTextPrimary: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: isDark ? '#1a1a1a' : '#ffffff',
-    },
-  });

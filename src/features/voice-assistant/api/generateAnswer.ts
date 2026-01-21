@@ -1,5 +1,6 @@
 import { openai } from '@/shared/api/openai';
 import { SYSTEM_PROMPT, OPENAI_CONFIG } from '@/shared/config';
+import { parseApiError } from '@/shared/api/errorHandler';
 
 interface GenerateAnswerOptions {
   question: string;
@@ -20,6 +21,7 @@ export async function generateAnswer(options: GenerateAnswerOptions): Promise<Ge
   const { question, previousContext, detailed = false } = options;
 
   let retryCount = 0;
+  let lastError: string | undefined;
 
   while (retryCount < OPENAI_CONFIG.retryCount) {
     try {
@@ -49,8 +51,12 @@ export async function generateAnswer(options: GenerateAnswerOptions): Promise<Ge
         return {
           answer: '',
           success: false,
-          error: '답변을 생성할 수 없습니다.',
+          error: '답변을 생성할 수 없습니다. 다시 질문해 주세요.',
         };
+      }
+
+      if (__DEV__) {
+        console.log('[GenerateAnswer] Success');
       }
 
       return {
@@ -59,13 +65,27 @@ export async function generateAnswer(options: GenerateAnswerOptions): Promise<Ge
       };
     } catch (error) {
       retryCount++;
-      console.error(`Answer generation attempt ${retryCount} failed:`, error);
+      const errorInfo = parseApiError(error);
+
+      if (__DEV__) {
+        console.error(`[GenerateAnswer] Attempt ${retryCount} failed:`, error);
+      }
+
+      if (!errorInfo.shouldRetry) {
+        return {
+          answer: '',
+          success: false,
+          error: errorInfo.userMessage,
+        };
+      }
+
+      lastError = errorInfo.userMessage;
 
       if (retryCount >= OPENAI_CONFIG.retryCount) {
         return {
           answer: '',
           success: false,
-          error: '잠시 후 다시 시도해 주세요.',
+          error: lastError,
         };
       }
 
@@ -76,7 +96,7 @@ export async function generateAnswer(options: GenerateAnswerOptions): Promise<Ge
   return {
     answer: '',
     success: false,
-    error: '답변 생성에 실패했습니다.',
+    error: '답변 생성에 실패했습니다. 다시 시도해 주세요.',
   };
 }
 
