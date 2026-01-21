@@ -53,7 +53,7 @@ export function Modal({
           onPress={closeOnOverlayClick ? onClose : undefined}
         >
           <Pressable
-            className={`bg-white dark:bg-neutral-800 rounded-3xl w-full ${sizeClasses[size]}`}
+            className={`bg-card rounded-3xl w-full ${sizeClasses[size]}`}
             onPress={(e) => e.stopPropagation()}
           >
             {children}
@@ -155,9 +155,9 @@ export function ModalCloseButton({ onPress, children }: ModalCloseButtonProps) {
   return (
     <Pressable
       onPress={onPress || onClose}
-      className="absolute top-4 right-4 w-8 h-8 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-700"
+      className="absolute top-4 right-4 w-8 h-8 items-center justify-center rounded-full bg-secondary"
     >
-      {children || <Text className="text-neutral-500 dark:text-neutral-400 text-lg">✕</Text>}
+      {children || <Text className="text-muted-foreground text-lg">✕</Text>}
     </Pressable>
   );
 }
@@ -178,7 +178,7 @@ export function Heading({ size = 'lg', className, ...props }: HeadingProps) {
 
   return (
     <Text
-      className={`font-bold text-neutral-900 dark:text-neutral-100 ${sizeClasses[size]} ${className}`}
+      className={`font-bold text-foreground ${sizeClasses[size]} ${className}`}
       {...props}
     />
   );

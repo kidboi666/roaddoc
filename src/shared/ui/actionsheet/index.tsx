@@ -68,10 +68,10 @@ export const ActionsheetContent = forwardRef<View, ActionsheetContentProps>(
     return (
       <View
         ref={ref}
-        className={`bg-white dark:bg-neutral-800 rounded-t-3xl ${className}`}
+        className={`bg-card rounded-t-3xl ${className}`}
         {...props}
       >
-        <View className="w-10 h-1 bg-neutral-300 dark:bg-neutral-600 rounded-full self-center mt-3 mb-2" />
+        <View className="w-10 h-1 bg-muted rounded-full self-center mt-3 mb-2" />
         {children}
       </View>
     );
@@ -103,7 +103,7 @@ export const ActionsheetDragIndicator = forwardRef<View, ActionsheetDragIndicato
     return (
       <View
         ref={ref}
-        className={`w-10 h-1 bg-neutral-300 dark:bg-neutral-600 rounded-full ${className}`}
+        className={`w-10 h-1 bg-muted rounded-full ${className}`}
         {...props}
       />
     );
@@ -122,7 +122,7 @@ export const ActionsheetItem = forwardRef<View, ActionsheetItemProps>(
       <Pressable
         ref={ref as any}
         onPress={onPress}
-        className={`flex-row items-center py-4 px-6 active:bg-neutral-100 dark:active:bg-neutral-700 ${className}`}
+        className={`flex-row items-center py-4 px-6 active:opacity-70 ${className}`}
         {...props}
       />
     );
@@ -138,7 +138,7 @@ export const ActionsheetItemText = forwardRef<Text, ActionsheetItemTextProps>(
     return (
       <Text
         ref={ref}
-        className={`text-base text-neutral-900 dark:text-neutral-100 ${className}`}
+        className={`text-base text-foreground ${className}`}
         {...props}
       />
     );

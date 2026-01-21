@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { requestRecordingPermissionsAsync } from 'expo-audio';
 import { APP_INFO, DISCLAIMER } from '@/shared/config';
 import { useSettings } from '@/shared/hooks';
+import { Ionicons } from '@expo/vector-icons';
 import {
   Button,
   ButtonText,
@@ -20,7 +21,7 @@ import {
 export default function OnboardingScreen() {
   const router = useRouter();
   const [showDisclaimer, setShowDisclaimer] = useState(false);
-  const { setOnboardingCompleted, setDisclaimerAccepted } = useSettings();
+  const { isDark, setOnboardingCompleted, setDisclaimerAccepted } = useSettings();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -81,7 +82,7 @@ export default function OnboardingScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-neutral-50 dark:bg-neutral-900 px-6">
+    <SafeAreaView className="flex-1 bg-background px-6">
       <Animated.View
         className="flex-1 justify-center items-center"
         style={{
@@ -89,19 +90,19 @@ export default function OnboardingScreen() {
           transform: [{ translateY: slideAnim }],
         }}
       >
-        <View className="w-24 h-24 rounded-3xl bg-blue-500 items-center justify-center mb-8 shadow-lg">
+        <View className="w-24 h-24 rounded-3xl bg-primary items-center justify-center mb-8 shadow-lg">
           <Text className="text-5xl">🚗</Text>
         </View>
 
-        <Text className="text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">
+        <Text className="text-4xl font-bold text-foreground mb-2">
           {APP_INFO.name}
         </Text>
-        <Text className="text-lg text-neutral-400 dark:text-neutral-500 mb-16">
+        <Text className="text-lg text-muted-foreground mb-16">
           {APP_INFO.slogan}
         </Text>
 
         <Card variant="filled" size="lg" className="items-center">
-          <Text className="text-base text-neutral-600 dark:text-neutral-300 text-center leading-7">
+          <Text className="text-base text-foreground text-center leading-7">
             운전 중 궁금한 도로교통법{'\n'}
             음성으로 물어보세요
           </Text>
@@ -127,8 +128,11 @@ export default function OnboardingScreen() {
         closeOnOverlayClick={false}
       >
         <ModalContent>
-          <View className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 items-center justify-center self-center mb-4">
-            <Text className="text-2xl">📋</Text>
+          <View
+            className="w-12 h-12 rounded-full items-center justify-center self-center mb-4"
+            style={{ backgroundColor: isDark ? '#1e3a5f' : '#dbeafe' }}
+          >
+            <Ionicons name="document-text-outline" size={24} color={isDark ? '#93c5fd' : '#3b82f6'} />
           </View>
 
           <ModalHeader className="items-center">
@@ -136,7 +140,7 @@ export default function OnboardingScreen() {
           </ModalHeader>
 
           <ModalBody>
-            <Text className="text-sm text-neutral-500 dark:text-neutral-400 leading-6">
+            <Text className="text-sm text-muted-foreground leading-6">
               {DISCLAIMER}
             </Text>
           </ModalBody>
@@ -155,7 +159,7 @@ export default function OnboardingScreen() {
               className="py-3 items-center active:opacity-70"
               onPress={handleDeclineDisclaimer}
             >
-              <Text className="text-base text-neutral-400 dark:text-neutral-500">
+              <Text className="text-base text-muted-foreground">
                 취소
               </Text>
             </Pressable>

@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { Pressable, View, Animated, StyleSheet, Easing } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSettings } from '@/shared/hooks';
 
 interface VoiceButtonProps {
   state: 'idle' | 'recording' | 'processing' | 'speaking';
@@ -10,10 +11,21 @@ interface VoiceButtonProps {
 }
 
 const BUTTON_COLORS = {
-  idle: '#3B82F6',
+  idle: {
+    light: '#FFFFFF',
+    dark: '#3B82F6',
+  },
   recording: '#EF4444',
   processing: '#6B7280',
   speaking: '#10B981',
+};
+
+const ICON_COLORS = {
+  idle: {
+    light: '#3B82F6',
+    dark: '#FFFFFF',
+  },
+  default: '#FFFFFF',
 };
 
 export function VoiceButton({
@@ -22,6 +34,7 @@ export function VoiceButton({
   onLongPress,
   disabled = false,
 }: VoiceButtonProps) {
+  const { isDark } = useSettings();
   const pulseAnim1 = useRef(new Animated.Value(0)).current;
   const pulseAnim2 = useRef(new Animated.Value(0)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
@@ -160,7 +173,14 @@ export function VoiceButton({
   };
 
   const iconName = getIcon();
-  const buttonColor = BUTTON_COLORS[state];
+  const buttonColor =
+    state === 'idle'
+      ? BUTTON_COLORS.idle[isDark ? 'dark' : 'light']
+      : BUTTON_COLORS[state];
+  const iconColor =
+    state === 'idle'
+      ? ICON_COLORS.idle[isDark ? 'dark' : 'light']
+      : ICON_COLORS.default;
 
   return (
     <View className="items-center justify-center w-44 h-44">
@@ -208,6 +228,7 @@ export function VoiceButton({
           style={({ pressed }) => [
             styles.button,
             { backgroundColor: buttonColor },
+            state === 'idle' && !isDark && styles.idleLightButton,
             pressed && styles.buttonPressed,
             disabled && styles.buttonDisabled,
           ]}
@@ -217,7 +238,7 @@ export function VoiceButton({
               state === 'processing' ? { transform: [{ rotate: spin }] } : undefined
             }
           >
-            <Ionicons name={iconName} size={44} color="#FFFFFF" />
+            <Ionicons name={iconName} size={44} color={iconColor} />
           </Animated.View>
         </Pressable>
       </Animated.View>
@@ -250,6 +271,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 12,
     elevation: 10,
+  },
+  idleLightButton: {
+    borderWidth: 2,
+    borderColor: '#3B82F6',
   },
   buttonPressed: {
     transform: [{ scale: 0.95 }],

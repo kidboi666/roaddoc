@@ -1,14 +1,14 @@
-import { useColorScheme } from 'react-native';
 import { Colors } from '@/shared/config';
+import { useSettings } from './useSettings';
 
 export function useThemeColor<T extends keyof typeof Colors.light>(
   colorName: T
 ): string {
-  const colorScheme = useColorScheme() ?? 'light';
-  return Colors[colorScheme][colorName];
+  const { effectiveColorScheme } = useSettings();
+  return Colors[effectiveColorScheme][colorName];
 }
 
 export function useColors() {
-  const colorScheme = useColorScheme() ?? 'light';
-  return Colors[colorScheme];
+  const { effectiveColorScheme } = useSettings();
+  return Colors[effectiveColorScheme];
 }

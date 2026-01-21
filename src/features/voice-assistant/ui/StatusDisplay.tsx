@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { View, Text, ScrollView, Animated, Easing } from 'react-native';
+import { useSettings } from '@/shared/hooks';
 
 interface StatusDisplayProps {
   state: 'idle' | 'recording' | 'processing' | 'speaking';
@@ -9,6 +10,7 @@ interface StatusDisplayProps {
 }
 
 export function StatusDisplay({ state, question, answer, error }: StatusDisplayProps) {
+  const { isDark } = useSettings();
   const questionOpacity = useRef(new Animated.Value(0)).current;
   const answerOpacity = useRef(new Animated.Value(0)).current;
   const errorOpacity = useRef(new Animated.Value(0)).current;
@@ -93,17 +95,26 @@ export function StatusDisplay({ state, question, answer, error }: StatusDisplayP
     <View className="flex-1 w-full">
       <Animated.Text
         style={{ opacity: state === 'processing' ? dotsOpacity : 1 }}
-        className="text-base font-medium text-center mb-4 text-neutral-500 dark:text-neutral-400"
+        className="text-base font-medium text-center mb-4 text-muted-foreground"
       >
         {statusMessage}
       </Animated.Text>
 
       {error && (
         <Animated.View
-          style={{ opacity: errorOpacity }}
-          className="rounded-2xl p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800"
+          style={[
+            { opacity: errorOpacity },
+            {
+              backgroundColor: isDark ? '#450a0a' : '#fef2f2',
+              borderColor: isDark ? '#7f1d1d' : '#fecaca',
+            },
+          ]}
+          className="rounded-2xl p-4 border"
         >
-          <Text className="text-sm text-red-600 dark:text-red-400 text-center leading-5">
+          <Text
+            style={{ color: isDark ? '#fca5a5' : '#dc2626' }}
+            className="text-sm text-center leading-5"
+          >
             {error}
           </Text>
         </Animated.View>
@@ -117,13 +128,16 @@ export function StatusDisplay({ state, question, answer, error }: StatusDisplayP
         >
           {question && (
             <Animated.View
-              style={{ opacity: questionOpacity }}
-              className="rounded-2xl p-4 bg-neutral-50 dark:bg-neutral-700/50"
+              style={[
+                { opacity: questionOpacity },
+                { backgroundColor: isDark ? 'rgba(64, 64, 64, 0.5)' : '#fafafa' },
+              ]}
+              className="rounded-2xl p-4"
             >
-              <Text className="text-xs font-semibold mb-2 uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+              <Text className="text-xs font-semibold mb-2 uppercase tracking-wider text-muted-foreground">
                 질문
               </Text>
-              <Text className="text-base leading-6 text-neutral-800 dark:text-neutral-200">
+              <Text className="text-base leading-6 text-foreground">
                 {question}
               </Text>
             </Animated.View>
@@ -131,13 +145,22 @@ export function StatusDisplay({ state, question, answer, error }: StatusDisplayP
 
           {answer && (
             <Animated.View
-              style={{ opacity: answerOpacity }}
-              className="rounded-2xl p-4 bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-900"
+              style={[
+                { opacity: answerOpacity },
+                {
+                  backgroundColor: isDark ? 'rgba(23, 37, 84, 0.5)' : '#eff6ff',
+                  borderColor: isDark ? '#1e3a8a' : '#dbeafe',
+                },
+              ]}
+              className="rounded-2xl p-4 border"
             >
-              <Text className="text-xs font-semibold mb-2 uppercase tracking-wider text-blue-500 dark:text-blue-400">
+              <Text
+                style={{ color: isDark ? '#93c5fd' : '#3b82f6' }}
+                className="text-xs font-semibold mb-2 uppercase tracking-wider"
+              >
                 답변
               </Text>
-              <Text className="text-base leading-7 text-neutral-800 dark:text-neutral-200">
+              <Text className="text-base leading-7 text-foreground">
                 {answer}
               </Text>
             </Animated.View>

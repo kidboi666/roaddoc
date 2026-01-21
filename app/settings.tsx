@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, Pressable, Alert, useColorScheme } from 'react-native';
+import { View, Text, ScrollView, Pressable, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,12 +25,11 @@ const THEME_OPTIONS: { label: string; value: ThemeMode }[] = [
 ];
 
 export default function SettingsScreen() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
   const router = useRouter();
 
   const {
     settings,
+    isDark,
     setTtsSpeed,
     setSilenceTimeout,
     setThemeMode,
@@ -62,22 +61,25 @@ export default function SettingsScreen() {
     THEME_OPTIONS.find((opt) => opt.value === settings.themeMode)?.label || '시스템 설정 따름';
 
   return (
-    <ScrollView className="flex-1 bg-neutral-50 dark:bg-neutral-900">
+    <ScrollView className="flex-1 bg-background">
       <View className="mt-8 mx-4">
-        <Text className="text-xs font-semibold text-neutral-400 dark:text-neutral-500 mb-3 ml-1 uppercase tracking-wider">
+        <Text className="text-xs font-semibold text-muted-foreground mb-3 ml-1 uppercase tracking-wider">
           음성 설정
         </Text>
 
         <Card variant="elevated" size="md" className="mb-3">
-          <View className="border-b border-neutral-100 dark:border-neutral-700 pb-4 mb-4">
+          <View className="border-b border-border pb-4 mb-4">
             <View className="flex-row justify-between items-center mb-3">
               <View className="flex-row items-center">
-                <View className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900 items-center justify-center mr-3">
+                <View
+                  className="w-8 h-8 rounded-lg items-center justify-center mr-3"
+                  style={{ backgroundColor: isDark ? '#1e3a5f' : '#dbeafe' }}
+                >
                   <Ionicons name="speedometer-outline" size={18} color={isDark ? '#93C5FD' : '#3B82F6'} />
                 </View>
-                <Text className="text-base text-neutral-900 dark:text-neutral-100">TTS 속도</Text>
+                <Text className="text-base text-foreground">TTS 속도</Text>
               </View>
-              <Text className="text-base font-medium text-blue-500">
+              <Text className="text-base font-medium text-primary">
                 {settings.ttsSpeed.toFixed(1)}x
               </Text>
             </View>
@@ -93,8 +95,8 @@ export default function SettingsScreen() {
               thumbTintColor="#3B82F6"
             />
             <View className="flex-row justify-between mt-1 px-1">
-              <Text className="text-xs text-neutral-400 dark:text-neutral-500">느림</Text>
-              <Text className="text-xs text-neutral-400 dark:text-neutral-500">빠름</Text>
+              <Text className="text-xs text-muted-foreground">느림</Text>
+              <Text className="text-xs text-muted-foreground">빠름</Text>
             </View>
           </View>
 
@@ -103,13 +105,16 @@ export default function SettingsScreen() {
             onPress={() => setShowSilencePicker(true)}
           >
             <View className="flex-row items-center">
-              <View className="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900 items-center justify-center mr-3">
+              <View
+                className="w-8 h-8 rounded-lg items-center justify-center mr-3"
+                style={{ backgroundColor: isDark ? '#7c2d12' : '#ffedd5' }}
+              >
                 <Ionicons name="timer-outline" size={18} color={isDark ? '#FDBA74' : '#F97316'} />
               </View>
-              <Text className="text-base text-neutral-900 dark:text-neutral-100">침묵 감지 시간</Text>
+              <Text className="text-base text-foreground">침묵 감지 시간</Text>
             </View>
             <View className="flex-row items-center">
-              <Text className="text-base text-neutral-400 dark:text-neutral-500 mr-1">
+              <Text className="text-base text-muted-foreground mr-1">
                 {currentSilenceLabel}
               </Text>
               <Ionicons name="chevron-forward" size={18} color={isDark ? '#525252' : '#A3A3A3'} />
@@ -119,7 +124,7 @@ export default function SettingsScreen() {
       </View>
 
       <View className="mt-6 mx-4">
-        <Text className="text-xs font-semibold text-neutral-400 dark:text-neutral-500 mb-3 ml-1 uppercase tracking-wider">
+        <Text className="text-xs font-semibold text-muted-foreground mb-3 ml-1 uppercase tracking-wider">
           화면 설정
         </Text>
 
@@ -129,13 +134,16 @@ export default function SettingsScreen() {
             onPress={() => setShowThemePicker(true)}
           >
             <View className="flex-row items-center">
-              <View className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900 items-center justify-center mr-3">
+              <View
+                className="w-8 h-8 rounded-lg items-center justify-center mr-3"
+                style={{ backgroundColor: isDark ? '#581c87' : '#f3e8ff' }}
+              >
                 <Ionicons name="moon-outline" size={18} color={isDark ? '#C4B5FD' : '#8B5CF6'} />
               </View>
-              <Text className="text-base text-neutral-900 dark:text-neutral-100">다크 모드</Text>
+              <Text className="text-base text-foreground">다크 모드</Text>
             </View>
             <View className="flex-row items-center">
-              <Text className="text-base text-neutral-400 dark:text-neutral-500 mr-1">
+              <Text className="text-base text-muted-foreground mr-1">
                 {currentThemeLabel}
               </Text>
               <Ionicons name="chevron-forward" size={18} color={isDark ? '#525252' : '#A3A3A3'} />
@@ -145,19 +153,19 @@ export default function SettingsScreen() {
       </View>
 
       <View className="mt-6 mx-4">
-        <Text className="text-xs font-semibold text-neutral-400 dark:text-neutral-500 mb-3 ml-1 uppercase tracking-wider">
+        <Text className="text-xs font-semibold text-muted-foreground mb-3 ml-1 uppercase tracking-wider">
           앱 정보
         </Text>
 
         <Card variant="elevated" size="md" className="mb-3">
           <View className="flex-row justify-between items-center">
             <View className="flex-row items-center">
-              <View className="w-8 h-8 rounded-lg bg-neutral-100 dark:bg-neutral-700 items-center justify-center mr-3">
+              <View className="w-8 h-8 rounded-lg bg-secondary items-center justify-center mr-3">
                 <Ionicons name="information-outline" size={18} color={isDark ? '#A3A3A3' : '#525252'} />
               </View>
-              <Text className="text-base text-neutral-900 dark:text-neutral-100">버전</Text>
+              <Text className="text-base text-foreground">버전</Text>
             </View>
-            <Text className="text-base text-neutral-400 dark:text-neutral-500">
+            <Text className="text-base text-muted-foreground">
               {APP_INFO.version}
             </Text>
           </View>
@@ -166,7 +174,7 @@ export default function SettingsScreen() {
 
       {__DEV__ && (
         <View className="mt-6 mx-4 mb-8">
-          <Text className="text-xs font-semibold text-neutral-400 dark:text-neutral-500 mb-3 ml-1 uppercase tracking-wider">
+          <Text className="text-xs font-semibold text-muted-foreground mb-3 ml-1 uppercase tracking-wider">
             개발용
           </Text>
 
@@ -175,10 +183,13 @@ export default function SettingsScreen() {
               className="flex-row items-center active:opacity-70"
               onPress={handleResetOnboarding}
             >
-              <View className="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900 items-center justify-center mr-3">
+              <View
+                className="w-8 h-8 rounded-lg items-center justify-center mr-3"
+                style={{ backgroundColor: isDark ? '#7f1d1d' : '#fee2e2' }}
+              >
                 <Ionicons name="refresh-outline" size={18} color={isDark ? '#FCA5A5' : '#EF4444'} />
               </View>
-              <Text className="text-base text-red-500 dark:text-red-400">
+              <Text className="text-base text-destructive">
                 온보딩 리셋
               </Text>
             </Pressable>
@@ -188,7 +199,7 @@ export default function SettingsScreen() {
 
       <Actionsheet isOpen={showSilencePicker} onClose={() => setShowSilencePicker(false)}>
         <ActionsheetContent>
-          <Text className="text-lg font-bold text-neutral-900 dark:text-neutral-100 text-center py-4">
+          <Text className="text-lg font-bold text-foreground text-center py-4">
             침묵 감지 시간
           </Text>
           <View className="pb-8">
@@ -199,10 +210,10 @@ export default function SettingsScreen() {
                   setSilenceTimeout(option.value);
                   setShowSilencePicker(false);
                 }}
-                className={settings.silenceTimeout === option.value ? 'bg-neutral-100 dark:bg-neutral-700 mx-4 rounded-xl' : 'mx-4 rounded-xl'}
+                className={settings.silenceTimeout === option.value ? 'bg-secondary mx-4 rounded-xl' : 'mx-4 rounded-xl'}
               >
                 <ActionsheetItemText
-                  className={settings.silenceTimeout === option.value ? 'font-semibold text-blue-500' : ''}
+                  className={settings.silenceTimeout === option.value ? 'font-semibold text-primary' : ''}
                 >
                   {option.label}
                 </ActionsheetItemText>
@@ -217,7 +228,7 @@ export default function SettingsScreen() {
 
       <Actionsheet isOpen={showThemePicker} onClose={() => setShowThemePicker(false)}>
         <ActionsheetContent>
-          <Text className="text-lg font-bold text-neutral-900 dark:text-neutral-100 text-center py-4">
+          <Text className="text-lg font-bold text-foreground text-center py-4">
             다크 모드
           </Text>
           <View className="pb-8">
@@ -228,10 +239,10 @@ export default function SettingsScreen() {
                   setThemeMode(option.value as ThemeMode);
                   setShowThemePicker(false);
                 }}
-                className={settings.themeMode === option.value ? 'bg-neutral-100 dark:bg-neutral-700 mx-4 rounded-xl' : 'mx-4 rounded-xl'}
+                className={settings.themeMode === option.value ? 'bg-secondary mx-4 rounded-xl' : 'mx-4 rounded-xl'}
               >
                 <ActionsheetItemText
-                  className={settings.themeMode === option.value ? 'font-semibold text-blue-500' : ''}
+                  className={settings.themeMode === option.value ? 'font-semibold text-primary' : ''}
                 >
                   {option.label}
                 </ActionsheetItemText>

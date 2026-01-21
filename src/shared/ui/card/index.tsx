@@ -1,14 +1,15 @@
-import { View, ViewProps, useColorScheme } from 'react-native';
+import { View, ViewProps } from 'react-native';
 import { forwardRef } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
+import { useSettings } from '@/shared/hooks';
 
 const cardVariants = cva('rounded-2xl overflow-hidden', {
   variants: {
     variant: {
-      elevated: 'bg-white dark:bg-neutral-800',
-      outline: 'bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700',
+      elevated: 'bg-card',
+      outline: 'bg-card border border-border',
       ghost: 'bg-transparent',
-      filled: 'bg-neutral-100 dark:bg-neutral-800',
+      filled: 'bg-secondary',
     },
     size: {
       sm: 'p-3',
@@ -26,8 +27,7 @@ export interface CardProps extends ViewProps, VariantProps<typeof cardVariants> 
 
 export const Card = forwardRef<View, CardProps>(
   ({ variant, size, className, style, ...props }, ref) => {
-    const colorScheme = useColorScheme();
-    const isDark = colorScheme === 'dark';
+    const { isDark } = useSettings();
 
     const shadowStyle =
       variant === 'elevated'
