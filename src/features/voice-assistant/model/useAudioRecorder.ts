@@ -35,8 +35,9 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}): UseAudi
   const lastSoundTimeRef = useRef<number>(Date.now());
   const recordingStartTimeRef = useRef<number>(0);
   const hasPassedGracePeriodRef = useRef(false);
-  const GRACE_PERIOD = 1000;
-  const SILENCE_THRESHOLD = -45;
+  const GRACE_PERIOD = 1500;
+  const MIN_RECORDING_DURATION = 2000;
+  const SILENCE_THRESHOLD = -40;
 
   const clearSilenceTimer = useCallback(() => {
     if (silenceTimerRef.current) {
@@ -61,7 +62,7 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}): UseAudi
     const currentLevel = recorderState.metering ?? -160;
 
     if (__DEV__) {
-      console.log(`[Audio] metering: ${currentLevel.toFixed(1)}, threshold: ${SILENCE_THRESHOLD}`);
+      console.log(`[Audio] metering: ${currentLevel.toFixed(1)}, duration: ${timeSinceStart}ms`);
     }
 
     if (currentLevel > SILENCE_THRESHOLD) {
@@ -70,11 +71,14 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}): UseAudi
     } else {
       const silentDuration = now - lastSoundTimeRef.current;
 
-      if (__DEV__) {
-        console.log(`[Audio] silent for: ${silentDuration}ms, timeout: ${silenceTimeout}ms`);
+      if (timeSinceStart < MIN_RECORDING_DURATION) {
+        return;
       }
 
       if (silentDuration >= silenceTimeout && !silenceTimerRef.current) {
+        if (__DEV__) {
+          console.log(`[Audio] Silence detected after ${timeSinceStart}ms, triggering stop`);
+        }
         silenceTimerRef.current = setTimeout(() => {
           if (isRecording && onSilenceDetected) {
             onSilenceDetected();

@@ -8,6 +8,34 @@ interface TranscribeResult {
   error?: string;
 }
 
+const HALLUCINATION_PATTERNS = [
+  '시청해주셔서 감사합니다',
+  '시청해 주셔서 감사합니다',
+  '구독과 좋아요',
+  '좋아요와 구독',
+  '구독 부탁',
+  '감사합니다',
+  'Thank you for watching',
+  'Thanks for watching',
+  'Subscribe',
+  '...',
+  '.',
+];
+
+function isLikelyHallucination(text: string): boolean {
+  const trimmed = text.trim();
+
+  if (trimmed.length < 3) return true;
+
+  for (const pattern of HALLUCINATION_PATTERNS) {
+    if (trimmed === pattern || trimmed.toLowerCase() === pattern.toLowerCase()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 export async function transcribeAudio(audioUri: string): Promise<TranscribeResult> {
   let retryCount = 0;
   let lastError: string | undefined;
@@ -25,6 +53,7 @@ export async function transcribeAudio(audioUri: string): Promise<TranscribeResul
       formData.append('model', 'whisper-1');
       formData.append('language', VOICE_CONFIG.language.split('-')[0]);
       formData.append('response_format', 'text');
+      formData.append('prompt', '도로교통법, 운전, 교통법규, 신호, 속도, 벌금, 벌점, 면허');
 
       const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
         method: 'POST',
@@ -64,12 +93,25 @@ export async function transcribeAudio(audioUri: string): Promise<TranscribeResul
         };
       }
 
+      const trimmedText = text.trim();
+
+      if (isLikelyHallucination(trimmedText)) {
+        if (__DEV__) {
+          console.log('[Transcribe] Detected hallucination:', trimmedText);
+        }
+        return {
+          text: '',
+          success: false,
+          error: '음성이 제대로 인식되지 않았습니다. 조금 더 크게 말씀해 주세요.',
+        };
+      }
+
       if (__DEV__) {
-        console.log('[Transcribe] Success:', text.trim());
+        console.log('[Transcribe] Success:', trimmedText);
       }
 
       return {
-        text: text.trim(),
+        text: trimmedText,
         success: true,
       };
     } catch (error) {
