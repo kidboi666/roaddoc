@@ -6,29 +6,30 @@ module.exports = {
     "./components/**/*.{js,jsx,ts,tsx}",
   ],
   presets: [require("nativewind/preset")],
-  darkMode: "class",
   theme: {
     extend: {
       colors: {
-        primary: "#4A90D9",
-        success: "#4CAF50",
-        error: "#F44336",
-        background: {
-          light: "#f5f5f5",
-          dark: "#121212",
-        },
+        background: "rgb(var(--color-background) / <alpha-value>)",
+        foreground: "rgb(var(--color-foreground) / <alpha-value>)",
         card: {
-          light: "#ffffff",
-          dark: "#1e1e1e",
+          DEFAULT: "rgb(var(--color-card) / <alpha-value>)",
+          foreground: "rgb(var(--color-card-foreground) / <alpha-value>)",
         },
-        text: {
-          light: "#1a1a1a",
-          dark: "#f5f5f5",
+        primary: {
+          DEFAULT: "rgb(var(--color-primary) / <alpha-value>)",
+          foreground: "rgb(var(--color-primary-foreground) / <alpha-value>)",
         },
-        "text-secondary": {
-          light: "#666666",
-          dark: "#a0a0a0",
+        secondary: {
+          DEFAULT: "rgb(var(--color-secondary) / <alpha-value>)",
+          foreground: "rgb(var(--color-secondary-foreground) / <alpha-value>)",
         },
+        muted: {
+          DEFAULT: "rgb(var(--color-muted) / <alpha-value>)",
+          foreground: "rgb(var(--color-muted-foreground) / <alpha-value>)",
+        },
+        destructive: "rgb(var(--color-destructive) / <alpha-value>)",
+        success: "rgb(var(--color-success) / <alpha-value>)",
+        border: "rgb(var(--color-border) / <alpha-value>)",
       },
     },
   },

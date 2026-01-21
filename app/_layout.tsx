@@ -2,17 +2,15 @@ import "../global.css";
 import { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useColorScheme, View, Text, ActivityIndicator } from 'react-native';
+import { View, Text, ActivityIndicator } from 'react-native';
 import { GluestackUIProvider } from '@/shared/ui';
 import { useSettings } from '@/shared/hooks';
 import { APP_INFO } from '@/shared/config';
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
   const router = useRouter();
   const segments = useSegments();
-  const { settings, isLoading } = useSettings();
+  const { settings, isLoading, isDark, effectiveColorScheme } = useSettings();
 
   useEffect(() => {
     if (isLoading) return;
@@ -29,10 +27,10 @@ export default function RootLayout() {
 
   if (isLoading) {
     return (
-      <GluestackUIProvider mode="system">
-        <View className="flex-1 justify-center items-center bg-neutral-100 dark:bg-neutral-900">
+      <GluestackUIProvider mode={effectiveColorScheme}>
+        <View className="flex-1 justify-center items-center bg-background">
           <Text className="text-4xl mb-4">🚗</Text>
-          <Text className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
+          <Text className="text-xl font-semibold text-foreground mb-2">
             {APP_INFO.name}
           </Text>
           <ActivityIndicator
@@ -46,7 +44,7 @@ export default function RootLayout() {
   }
 
   return (
-    <GluestackUIProvider mode="system">
+    <GluestackUIProvider mode={effectiveColorScheme}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack
         screenOptions={{

@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
+import { useColorScheme } from 'react-native';
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { VOICE_CONFIG, type ThemeMode } from '@/shared/config';
@@ -119,14 +120,26 @@ const useSettingsStore = create<SettingsState>((set, get) => ({
 
 export function useSettings() {
   const store = useSettingsStore();
+  const systemColorScheme = useColorScheme();
 
   useEffect(() => {
     store.loadSettings();
   }, []);
 
+  const effectiveColorScheme = useMemo(() => {
+    if (store.settings.themeMode === 'system') {
+      return systemColorScheme ?? 'light';
+    }
+    return store.settings.themeMode;
+  }, [store.settings.themeMode, systemColorScheme]);
+
+  const isDark = effectiveColorScheme === 'dark';
+
   return {
     settings: store.settings,
     isLoading: store.isLoading,
+    effectiveColorScheme,
+    isDark,
     setOnboardingCompleted: store.setOnboardingCompleted,
     setDisclaimerAccepted: store.setDisclaimerAccepted,
     setTtsSpeed: store.setTtsSpeed,

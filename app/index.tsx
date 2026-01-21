@@ -1,17 +1,15 @@
-import { Pressable, View, Text, useColorScheme } from 'react-native';
+import { Pressable, View, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { APP_INFO } from '@/shared/config';
+import { useSettings } from '@/shared/hooks';
 import { useVoiceAssistant } from '@/features/voice-assistant/model/useVoiceAssistant';
 import { VoiceButton } from '@/features/voice-assistant/ui/VoiceButton';
 import { StatusDisplay } from '@/features/voice-assistant/ui/StatusDisplay';
-import { Card } from '@/shared/ui';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { isDark } = useSettings();
 
   const {
     state,
@@ -53,14 +51,11 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-neutral-50 dark:bg-neutral-900">
-      <View className="flex-row items-center justify-between px-5 py-3">
-        <Text className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-          {APP_INFO.name}
-        </Text>
+    <SafeAreaView className="flex-1 bg-background">
+      <View className="flex-row items-center justify-end px-5 py-3">
         <Pressable
           onPress={() => router.push('/settings')}
-          className="w-10 h-10 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800 active:opacity-70"
+          className="w-10 h-10 items-center justify-center rounded-full bg-secondary active:opacity-70"
         >
           <Ionicons
             name="settings-outline"
@@ -70,18 +65,14 @@ export default function HomeScreen() {
         </Pressable>
       </View>
 
-      <Card
-        variant="elevated"
-        size="lg"
-        className="flex-1 mx-4 my-3"
-      >
+      <View className="flex-1 px-5 py-3">
         <StatusDisplay
           state={state}
           question={currentQuestion}
           answer={currentAnswer}
           error={error}
         />
-      </Card>
+      </View>
 
       <View className="items-center pt-4 pb-6">
         <VoiceButton
@@ -89,7 +80,7 @@ export default function HomeScreen() {
           onPress={handlePress}
           onLongPress={handleLongPress}
         />
-        <Text className="text-sm text-neutral-400 dark:text-neutral-500 mt-3 h-5">
+        <Text className="text-sm text-muted-foreground mt-3 h-5">
           {getHintText()}
         </Text>
       </View>

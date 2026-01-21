@@ -2,7 +2,7 @@ import { Text as RNText, TextProps as RNTextProps } from 'react-native';
 import { forwardRef } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 
-const textVariants = cva('text-neutral-900 dark:text-neutral-100', {
+const textVariants = cva('text-foreground', {
   variants: {
     size: {
       '2xs': 'text-[10px]',
@@ -37,7 +37,7 @@ const textVariants = cva('text-neutral-900 dark:text-neutral-100', {
       false: '',
     },
     highlight: {
-      true: 'bg-yellow-200 dark:bg-yellow-800',
+      true: '',
       false: '',
     },
   },

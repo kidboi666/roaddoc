@@ -1,23 +1,19 @@
 import { View, ViewProps } from 'react-native';
-import { useColorScheme } from 'react-native';
+import { themeVars } from '@/shared/config';
 
 interface GluestackUIProviderProps extends ViewProps {
-  mode?: 'light' | 'dark' | 'system';
+  mode?: 'light' | 'dark';
   children: React.ReactNode;
 }
 
 export function GluestackUIProvider({
-  mode = 'system',
+  mode = 'light',
   children,
   ...props
 }: GluestackUIProviderProps) {
-  const colorScheme = useColorScheme();
-  const resolvedMode = mode === 'system' ? colorScheme : mode;
-
   return (
     <View
-      className={resolvedMode === 'dark' ? 'dark' : ''}
-      style={{ flex: 1 }}
+      style={[{ flex: 1 }, themeVars[mode]]}
       {...props}
     >
       {children}
