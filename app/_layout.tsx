@@ -3,14 +3,30 @@ import { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View, Text, ActivityIndicator } from 'react-native';
+import * as Linking from 'expo-linking';
 import { GluestackUIProvider } from '@/shared/ui';
-import { useSettings } from '@/shared/hooks';
+import { useSettings, useAutoStart } from '@/shared/hooks';
 import { APP_INFO } from '@/shared/config';
 
 export default function RootLayout() {
   const router = useRouter();
   const segments = useSegments();
   const { settings, isLoading, isDark, effectiveColorScheme } = useSettings();
+  const { setShouldAutoStartRecording } = useAutoStart();
+  const url = Linking.useURL();
+
+  useEffect(() => {
+    if (!url) return;
+
+    const { path, queryParams } = Linking.parse(url);
+    if (path === 'start-recording') {
+      const autoParam = queryParams?.auto;
+      const shouldAuto = autoParam !== 'false';
+      if (shouldAuto) {
+        setShouldAutoStartRecording(true);
+      }
+    }
+  }, [url, setShouldAutoStartRecording]);
 
   useEffect(() => {
     if (isLoading) return;

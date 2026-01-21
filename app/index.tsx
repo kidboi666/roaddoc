@@ -1,15 +1,20 @@
+import { useEffect, useRef } from 'react';
 import { Pressable, View, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useSettings } from '@/shared/hooks';
+import * as Speech from 'expo-speech';
+import { useSettings, useAutoStart } from '@/shared/hooks';
 import { useVoiceAssistant } from '@/features/voice-assistant/model/useVoiceAssistant';
 import { VoiceButton } from '@/features/voice-assistant/ui/VoiceButton';
 import { StatusDisplay } from '@/features/voice-assistant/ui/StatusDisplay';
+import { VOICE_CONFIG } from '@/shared/config';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { isDark } = useSettings();
+  const { isDark, settings } = useSettings();
+  const { shouldAutoStartRecording, clearAutoStart } = useAutoStart();
+  const autoStartHandledRef = useRef(false);
 
   const {
     state,
@@ -20,6 +25,30 @@ export default function HomeScreen() {
     stopListening,
     cancel,
   } = useVoiceAssistant();
+
+  useEffect(() => {
+    if (shouldAutoStartRecording && state === 'idle' && !autoStartHandledRef.current) {
+      autoStartHandledRef.current = true;
+      clearAutoStart();
+
+      Speech.speak('네, 질문하세요', {
+        language: VOICE_CONFIG.language,
+        rate: settings.ttsSpeed,
+        onDone: () => {
+          startListening();
+        },
+        onError: () => {
+          startListening();
+        },
+      });
+    }
+  }, [shouldAutoStartRecording, state, clearAutoStart, startListening, settings.ttsSpeed]);
+
+  useEffect(() => {
+    if (!shouldAutoStartRecording) {
+      autoStartHandledRef.current = false;
+    }
+  }, [shouldAutoStartRecording]);
 
   const handlePress = () => {
     if (state === 'idle') {
