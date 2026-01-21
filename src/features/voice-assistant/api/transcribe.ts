@@ -1,6 +1,5 @@
-import { File as ExpoFile } from 'expo-file-system';
-import { openai } from '@/shared/api/openai';
 import { VOICE_CONFIG, OPENAI_CONFIG } from '@/shared/config';
+import { parseHttpStatus } from '@/shared/api/errorHandler';
 import { getAudioFileExtension, getAudioMimeType } from '../model/useAudioRecorder';
 
 interface TranscribeResult {
@@ -11,41 +10,62 @@ interface TranscribeResult {
 
 export async function transcribeAudio(audioUri: string): Promise<TranscribeResult> {
   let retryCount = 0;
+  let lastError: string | undefined;
 
   while (retryCount < OPENAI_CONFIG.retryCount) {
     try {
-      const expoFile = new ExpoFile(audioUri);
+      const formData = new FormData();
 
-      if (!expoFile.exists) {
-        return {
-          text: '',
-          success: false,
-          error: '오디오 파일을 찾을 수 없습니다.',
-        };
+      formData.append('file', {
+        uri: audioUri,
+        type: getAudioMimeType(),
+        name: `recording.${getAudioFileExtension()}`,
+      } as unknown as Blob);
+
+      formData.append('model', 'whisper-1');
+      formData.append('language', VOICE_CONFIG.language.split('-')[0]);
+      formData.append('response_format', 'text');
+
+      const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${process.env.EXPO_PUBLIC_OPENAI_API_KEY}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        const errorInfo = parseHttpStatus(response.status, errorBody);
+
+        if (__DEV__) {
+          console.error(`[Transcribe] API error ${response.status}:`, errorBody);
+        }
+
+        if (!errorInfo.shouldRetry) {
+          return {
+            text: '',
+            success: false,
+            error: errorInfo.userMessage,
+          };
+        }
+
+        lastError = errorInfo.userMessage;
+        throw new Error(errorInfo.userMessage);
       }
 
-      const base64Audio = await expoFile.base64();
-      const audioBlob = base64ToBlob(base64Audio, getAudioMimeType());
-
-      const audioFile = new File(
-        [audioBlob],
-        `recording.${getAudioFileExtension()}`,
-        { type: getAudioMimeType() }
-      );
-
-      const text = await openai.audio.transcriptions.create({
-        file: audioFile,
-        model: 'whisper-1',
-        language: VOICE_CONFIG.language.split('-')[0],
-        response_format: 'text',
-      });
+      const text = await response.text();
 
       if (!text || text.trim().length === 0) {
         return {
           text: '',
           success: false,
-          error: '음성이 인식되지 않았습니다.',
+          error: '음성이 인식되지 않았습니다. 다시 말씀해 주세요.',
         };
+      }
+
+      if (__DEV__) {
+        console.log('[Transcribe] Success:', text.trim());
       }
 
       return {
@@ -54,13 +74,16 @@ export async function transcribeAudio(audioUri: string): Promise<TranscribeResul
       };
     } catch (error) {
       retryCount++;
-      console.error(`Transcription attempt ${retryCount} failed:`, error);
+
+      if (__DEV__) {
+        console.error(`[Transcribe] Attempt ${retryCount} failed:`, error);
+      }
 
       if (retryCount >= OPENAI_CONFIG.retryCount) {
         return {
           text: '',
           success: false,
-          error: '음성 인식에 실패했습니다. 다시 시도해 주세요.',
+          error: lastError || '음성 인식에 실패했습니다. 다시 시도해 주세요.',
         };
       }
 
@@ -73,16 +96,4 @@ export async function transcribeAudio(audioUri: string): Promise<TranscribeResul
     success: false,
     error: '음성 인식에 실패했습니다.',
   };
-}
-
-function base64ToBlob(base64: string, mimeType: string): Blob {
-  const byteCharacters = atob(base64);
-  const byteNumbers = new Array(byteCharacters.length);
-
-  for (let i = 0; i < byteCharacters.length; i++) {
-    byteNumbers[i] = byteCharacters.charCodeAt(i);
-  }
-
-  const byteArray = new Uint8Array(byteNumbers);
-  return new Blob([byteArray], { type: mimeType });
 }

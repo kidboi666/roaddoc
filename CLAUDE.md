@@ -83,6 +83,12 @@ EXPO_PUBLIC_OPENAI_API_KEY=sk-xxxx
 - 코드에 주석 작성 금지 (self-documenting code 지향)
 - 변수명, 함수명으로 의도를 명확하게 표현
 
+## Task Tracking Convention
+
+- 작업 완료 후 반드시 `docs/roaddoc-spec.md`의 개발 순서 체크리스트 업데이트
+- 완료된 항목: `[ ]` → `[x]`로 변경
+- 새로운 작업 추가 시 해당 Phase에 항목 추가
+
 ## Important Specs
 
 - Refer to `docs/roaddoc-spec.md` for complete MVP specifications

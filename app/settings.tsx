@@ -7,7 +7,9 @@ import {
   useColorScheme,
   Pressable,
   Modal,
+  Alert,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import Slider from '@react-native-community/slider';
 import { APP_INFO, VOICE_CONFIG, type ThemeMode } from '@/shared/config';
 import { useSettings } from '@/shared/hooks';
@@ -27,10 +29,33 @@ export default function SettingsScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const styles = createStyles(isDark);
+  const router = useRouter();
 
-  const { settings, setTtsSpeed, setSilenceTimeout, setThemeMode } = useSettings();
+  const {
+    settings,
+    setTtsSpeed,
+    setSilenceTimeout,
+    setThemeMode,
+    setOnboardingCompleted,
+    setDisclaimerAccepted,
+  } = useSettings();
   const [showSilencePicker, setShowSilencePicker] = useState(false);
   const [showThemePicker, setShowThemePicker] = useState(false);
+
+  const handleResetOnboarding = () => {
+    Alert.alert('온보딩 리셋', '온보딩을 다시 진행하시겠습니까?', [
+      { text: '취소', style: 'cancel' },
+      {
+        text: '리셋',
+        style: 'destructive',
+        onPress: async () => {
+          await setOnboardingCompleted(false);
+          await setDisclaimerAccepted(false);
+          router.replace('/onboarding');
+        },
+      },
+    ]);
+  };
 
   const currentSilenceLabel =
     SILENCE_OPTIONS.find((opt) => opt.value === settings.silenceTimeout)?.label || '1.5초';
@@ -96,6 +121,17 @@ export default function SettingsScreen() {
           </View>
         </View>
       </View>
+
+      {/* 개발용 섹션 */}
+      {__DEV__ && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>개발용</Text>
+
+          <Pressable style={styles.dangerCard} onPress={handleResetOnboarding}>
+            <Text style={styles.dangerLabel}>온보딩 리셋</Text>
+          </Pressable>
+        </View>
+      )}
 
       {/* 침묵 감지 시간 선택 모달 */}
       <PickerModal
@@ -236,6 +272,19 @@ const createStyles = (isDark: boolean) =>
     sliderLabel: {
       fontSize: 12,
       color: isDark ? '#666666' : '#999999',
+    },
+    dangerCard: {
+      backgroundColor: isDark ? '#3d1f1f' : '#fef2f2',
+      borderRadius: 10,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      marginBottom: 8,
+      alignItems: 'center',
+    },
+    dangerLabel: {
+      fontSize: 16,
+      color: isDark ? '#f87171' : '#dc2626',
+      fontWeight: '500',
     },
   });
 

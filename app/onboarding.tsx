@@ -9,6 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { requestRecordingPermissionsAsync } from 'expo-audio';
 import { APP_INFO, DISCLAIMER } from '@/shared/config';
 import { useSettings } from '@/shared/hooks';
@@ -17,6 +18,7 @@ export default function OnboardingScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const styles = createStyles(isDark);
+  const router = useRouter();
 
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const { setOnboardingCompleted, setDisclaimerAccepted } = useSettings();
@@ -39,6 +41,7 @@ export default function OnboardingScreen() {
     setShowDisclaimer(false);
     await setDisclaimerAccepted(true);
     await setOnboardingCompleted(true);
+    router.replace('/');
   };
 
   const handleDeclineDisclaimer = () => {
