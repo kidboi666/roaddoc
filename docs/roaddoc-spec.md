@@ -41,8 +41,10 @@
 
 | 영역 | 기술 | 용도 |
 |------|------|------|
-| 프레임워크 | Expo (~52.0.0) | 앱 기본 구조 |
+| 프레임워크 | Expo (~54.0.0) | 앱 기본 구조 |
 | 라우팅 | Expo Router (~4.0.0) | 화면 네비게이션 |
+| UI 라이브러리 | gluestack-ui v3 | 모던 UI 컴포넌트 |
+| 스타일링 | NativeWind (Tailwind CSS) | 유틸리티 기반 스타일링 |
 | 오디오 녹음 | expo-audio | 음성 녹음 |
 | STT | OpenAI Whisper API | 음성 → 텍스트 |
 | TTS | expo-speech (~13.0.0) | 텍스트 → 음성 (디바이스 기본 TTS) |
@@ -56,13 +58,15 @@
 ```json
 {
   "dependencies": {
-    "expo": "~52.0.0",
+    "expo": "~54.0.0",
     "expo-router": "~4.0.0",
-    "expo-audio": "~0.3.0",
+    "expo-audio": "~1.1.1",
     "expo-speech": "~13.0.0",
     "openai": "^4.50.0",
     "zustand": "^4.5.0",
-    "@react-native-async-storage/async-storage": "^2.1.0"
+    "@react-native-async-storage/async-storage": "^2.1.0",
+    "nativewind": "^4.0.0",
+    "tailwindcss": "^3.4.0"
   }
 }
 ```
@@ -501,6 +505,28 @@ EXPO_PUBLIC_OPENAI_API_KEY=sk-xxxx
 - [x] UI 다듬기
 - [ ] iOS 실기기 테스트
 - [ ] Android 실기기 테스트
+
+### Phase 6: UI 현대화 (NativeWind/Tailwind CSS + gluestack-ui v3)
+- [x] NativeWind 설치 및 초기 설정
+  - [x] NativeWind (Tailwind CSS) 설정
+  - [x] 테마 설정 (다크모드 연동)
+- [x] 화면별 마이그레이션
+  - [x] 온보딩 화면 (onboarding.tsx)
+  - [x] 홈 화면 (index.tsx)
+  - [x] 설정 화면 (settings.tsx)
+- [x] 커스텀 컴포넌트 리팩토링
+  - [x] VoiceButton 컴포넌트
+  - [x] StatusDisplay 컴포넌트
+- [x] 애니메이션 개선
+  - [x] 화면 전환 애니메이션
+  - [x] 마이크로 인터랙션
+- [x] gluestack-ui v3 스타일 컴포넌트 구축
+  - [x] GluestackUIProvider
+  - [x] Button 컴포넌트 (variants: solid, outline, ghost, link)
+  - [x] Card 컴포넌트 (variants: elevated, outline, ghost, filled)
+  - [x] Modal 컴포넌트 (ModalContent, ModalHeader, ModalBody, ModalFooter)
+  - [x] Actionsheet 컴포넌트 (바텀시트 스타일)
+  - [x] Box, Text 컴포넌트
 
 ---
 
