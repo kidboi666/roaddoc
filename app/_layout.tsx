@@ -1,11 +1,15 @@
+import "../global.css";
 import { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useColorScheme, View, ActivityIndicator } from 'react-native';
+import { useColorScheme, View, Text, ActivityIndicator } from 'react-native';
+import { GluestackUIProvider } from '@/shared/ui';
 import { useSettings } from '@/shared/hooks';
+import { APP_INFO } from '@/shared/config';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const router = useRouter();
   const segments = useSegments();
   const { settings, isLoading } = useSettings();
@@ -25,32 +29,47 @@ export default function RootLayout() {
 
   if (isLoading) {
     return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: colorScheme === 'dark' ? '#121212' : '#f5f5f5',
-        }}
-      >
-        <ActivityIndicator size="large" color={colorScheme === 'dark' ? '#fff' : '#333'} />
-      </View>
+      <GluestackUIProvider mode="system">
+        <View className="flex-1 justify-center items-center bg-neutral-100 dark:bg-neutral-900">
+          <Text className="text-4xl mb-4">🚗</Text>
+          <Text className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
+            {APP_INFO.name}
+          </Text>
+          <ActivityIndicator
+            size="small"
+            color={isDark ? '#a3a3a3' : '#525252'}
+            className="mt-4"
+          />
+        </View>
+      </GluestackUIProvider>
     );
   }
 
   return (
-    <>
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+    <GluestackUIProvider mode="system">
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
           headerShown: false,
           contentStyle: {
-            backgroundColor: colorScheme === 'dark' ? '#121212' : '#f5f5f5',
+            backgroundColor: isDark ? '#171717' : '#f5f5f5',
           },
+          animation: 'fade',
+          animationDuration: 200,
         }}
       >
-        <Stack.Screen name="index" />
-        <Stack.Screen name="onboarding" />
+        <Stack.Screen
+          name="index"
+          options={{
+            animation: 'fade',
+          }}
+        />
+        <Stack.Screen
+          name="onboarding"
+          options={{
+            animation: 'fade',
+          }}
+        />
         <Stack.Screen
           name="settings"
           options={{
@@ -58,12 +77,15 @@ export default function RootLayout() {
             headerShown: true,
             headerTitle: '설정',
             headerStyle: {
-              backgroundColor: colorScheme === 'dark' ? '#1e1e1e' : '#ffffff',
+              backgroundColor: isDark ? '#262626' : '#ffffff',
             },
-            headerTintColor: colorScheme === 'dark' ? '#f5f5f5' : '#1a1a1a',
+            headerTintColor: isDark ? '#f5f5f5' : '#171717',
+            headerShadowVisible: false,
+            animation: 'slide_from_bottom',
+            animationDuration: 250,
           }}
         />
       </Stack>
-    </>
+    </GluestackUIProvider>
   );
 }

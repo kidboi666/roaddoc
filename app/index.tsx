@@ -1,17 +1,17 @@
-import { StyleSheet, Pressable, View, Text, useColorScheme } from 'react-native';
+import { Pressable, View, Text, useColorScheme } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { APP_INFO, Colors } from '@/shared/config';
+import { APP_INFO } from '@/shared/config';
 import { useVoiceAssistant } from '@/features/voice-assistant/model/useVoiceAssistant';
 import { VoiceButton } from '@/features/voice-assistant/ui/VoiceButton';
 import { StatusDisplay } from '@/features/voice-assistant/ui/StatusDisplay';
+import { Card } from '@/shared/ui';
 
 export default function HomeScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const colors = isDark ? Colors.dark : Colors.light;
 
   const {
     state,
@@ -39,88 +39,60 @@ export default function HomeScreen() {
     }
   };
 
+  const getHintText = () => {
+    switch (state) {
+      case 'recording':
+        return '다시 탭하면 중지';
+      case 'speaking':
+        return '탭해서 중지';
+      case 'processing':
+        return '';
+      default:
+        return '탭해서 질문하세요';
+    }
+  };
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.header}>
+    <SafeAreaView className="flex-1 bg-neutral-50 dark:bg-neutral-900">
+      <View className="flex-row items-center justify-between px-5 py-3">
+        <Text className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+          {APP_INFO.name}
+        </Text>
         <Pressable
           onPress={() => router.push('/settings')}
-          style={styles.settingsButton}
+          className="w-10 h-10 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800 active:opacity-70"
         >
           <Ionicons
             name="settings-outline"
-            size={24}
-            color={colors.text}
+            size={22}
+            color={isDark ? '#a3a3a3' : '#525252'}
           />
         </Pressable>
-        <Text style={[styles.title, { color: colors.text }]}>
-          {APP_INFO.name}
-        </Text>
       </View>
 
-      <View style={[styles.conversationArea, { backgroundColor: colors.card }]}>
+      <Card
+        variant="elevated"
+        size="lg"
+        className="flex-1 mx-4 my-3"
+      >
         <StatusDisplay
           state={state}
           question={currentQuestion}
           answer={currentAnswer}
           error={error}
         />
-      </View>
+      </Card>
 
-      <View style={styles.micArea}>
+      <View className="items-center pt-4 pb-6">
         <VoiceButton
           state={state}
           onPress={handlePress}
           onLongPress={handleLongPress}
         />
-        <Text style={[styles.hint, { color: colors.textSecondary }]}>
-          {state === 'idle'
-            ? '탭해서 질문하세요'
-            : state === 'recording'
-            ? '다시 탭하면 중지'
-            : state === 'speaking'
-            ? '탭해서 중지'
-            : '처리 중...'}
+        <Text className="text-sm text-neutral-400 dark:text-neutral-500 mt-3 h-5">
+          {getHintText()}
         </Text>
       </View>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    position: 'relative',
-  },
-  settingsButton: {
-    position: 'absolute',
-    left: 16,
-    padding: 8,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '600',
-  },
-  conversationArea: {
-    flex: 1,
-    marginHorizontal: 16,
-    marginVertical: 8,
-    borderRadius: 16,
-    padding: 16,
-  },
-  micArea: {
-    alignItems: 'center',
-    paddingVertical: 24,
-    paddingBottom: 32,
-  },
-  hint: {
-    fontSize: 14,
-    marginTop: 8,
-  },
-});
