@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, Pressable, Alert } from 'react-native';
+import { View, Text, ScrollView, Pressable, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,10 +8,15 @@ import { useSettings } from '@/shared/hooks';
 import {
   Card,
   Actionsheet,
+  ActionsheetBackdrop,
   ActionsheetContent,
   ActionsheetItem,
   ActionsheetItemText,
 } from '@/shared/ui';
+import {
+  openShortcutsApp,
+  getShortcutSetupInstructions,
+} from '@/shared/lib/shortcuts';
 
 const SILENCE_OPTIONS = VOICE_CONFIG.silenceTimeoutOptions.map((ms) => ({
   label: `${ms / 1000}초`,
@@ -39,6 +44,30 @@ export default function SettingsScreen() {
 
   const [showSilencePicker, setShowSilencePicker] = useState(false);
   const [showThemePicker, setShowThemePicker] = useState(false);
+  const [showVoiceAssistantGuide, setShowVoiceAssistantGuide] = useState(false);
+
+  const handleVoiceAssistantSetup = async () => {
+    if (Platform.OS === 'ios') {
+      setShowVoiceAssistantGuide(true);
+    } else {
+      Alert.alert(
+        'Google Assistant 설정',
+        '다음과 같이 설정하세요:\n\n' +
+          '1. Google Assistant 앱을 엽니다\n' +
+          '2. "루틴" 메뉴로 이동합니다\n' +
+          '3. 새 루틴을 추가하고 시작 조건에 "로드닥 실행해"를 입력합니다\n' +
+          '4. 동작에 "로드닥 앱 열기"를 추가합니다',
+        [{ text: '확인' }]
+      );
+    }
+  };
+
+  const handleOpenShortcutsApp = async () => {
+    const opened = await openShortcutsApp();
+    if (!opened) {
+      Alert.alert('오류', '단축어 앱을 열 수 없습니다.');
+    }
+  };
 
   const handleResetOnboarding = () => {
     Alert.alert('온보딩 리셋', '온보딩을 다시 진행하시겠습니까?', [
@@ -125,6 +154,41 @@ export default function SettingsScreen() {
 
       <View className="mt-6 mx-4">
         <Text className="text-xs font-semibold text-muted-foreground mb-3 ml-1 uppercase tracking-wider">
+          음성 비서 연동
+        </Text>
+
+        <Card variant="elevated" size="md" className="mb-3">
+          <Pressable
+            className="flex-row justify-between items-center active:opacity-70"
+            onPress={handleVoiceAssistantSetup}
+          >
+            <View className="flex-row items-center">
+              <View
+                className="w-8 h-8 rounded-lg items-center justify-center mr-3"
+                style={{ backgroundColor: isDark ? '#14532d' : '#dcfce7' }}
+              >
+                <Ionicons
+                  name={Platform.OS === 'ios' ? 'mic-outline' : 'logo-google'}
+                  size={18}
+                  color={isDark ? '#86EFAC' : '#22C55E'}
+                />
+              </View>
+              <View>
+                <Text className="text-base text-foreground">
+                  {Platform.OS === 'ios' ? 'Siri 단축어 설정' : 'Google Assistant 설정'}
+                </Text>
+                <Text className="text-xs text-muted-foreground mt-0.5">
+                  음성으로 앱 실행하기
+                </Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={isDark ? '#525252' : '#A3A3A3'} />
+          </Pressable>
+        </Card>
+      </View>
+
+      <View className="mt-6 mx-4">
+        <Text className="text-xs font-semibold text-muted-foreground mb-3 ml-1 uppercase tracking-wider">
           화면 설정
         </Text>
 
@@ -198,6 +262,7 @@ export default function SettingsScreen() {
       )}
 
       <Actionsheet isOpen={showSilencePicker} onClose={() => setShowSilencePicker(false)}>
+        <ActionsheetBackdrop />
         <ActionsheetContent>
           <Text className="text-lg font-bold text-foreground text-center py-4">
             침묵 감지 시간
@@ -227,6 +292,7 @@ export default function SettingsScreen() {
       </Actionsheet>
 
       <Actionsheet isOpen={showThemePicker} onClose={() => setShowThemePicker(false)}>
+        <ActionsheetBackdrop />
         <ActionsheetContent>
           <Text className="text-lg font-bold text-foreground text-center py-4">
             다크 모드
@@ -251,6 +317,30 @@ export default function SettingsScreen() {
                 )}
               </ActionsheetItem>
             ))}
+          </View>
+        </ActionsheetContent>
+      </Actionsheet>
+
+      <Actionsheet isOpen={showVoiceAssistantGuide} onClose={() => setShowVoiceAssistantGuide(false)}>
+        <ActionsheetBackdrop />
+        <ActionsheetContent>
+          <Text className="text-lg font-bold text-foreground text-center py-4">
+            Siri 단축어 설정 방법
+          </Text>
+          <View className="px-4 pb-4">
+            {getShortcutSetupInstructions().map((instruction, index) => (
+              <Text key={index} className="text-sm text-foreground py-1.5">
+                {instruction}
+              </Text>
+            ))}
+          </View>
+          <View className="pb-8 px-4">
+            <Pressable
+              className="bg-primary py-3 px-6 rounded-xl items-center active:opacity-80"
+              onPress={handleOpenShortcutsApp}
+            >
+              <Text className="text-white font-semibold">단축어 앱 열기</Text>
+            </Pressable>
           </View>
         </ActionsheetContent>
       </Actionsheet>

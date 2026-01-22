@@ -1,4 +1,5 @@
-import { createContext, useContext, forwardRef } from 'react';
+'use client';
+import { createContext, useContext, forwardRef, useEffect, useState } from 'react';
 import {
   Modal as RNModal,
   View,
@@ -7,13 +8,26 @@ import {
   ViewProps,
   TextProps,
   ScrollView,
+  useWindowDimensions,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+  runOnJS,
+} from 'react-native-reanimated';
 
 interface ActionsheetContextType {
   onClose?: () => void;
+  isOpen: boolean;
+  onAnimationComplete: () => void;
 }
 
-const ActionsheetContext = createContext<ActionsheetContextType>({});
+const ActionsheetContext = createContext<ActionsheetContextType>({
+  isOpen: false,
+  onAnimationComplete: () => {},
+});
 
 export interface ActionsheetProps {
   isOpen: boolean;
@@ -22,22 +36,32 @@ export interface ActionsheetProps {
 }
 
 export function Actionsheet({ isOpen, onClose, children }: ActionsheetProps) {
+  const [modalVisible, setModalVisible] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setModalVisible(true);
+    }
+  }, [isOpen]);
+
+  const handleAnimationComplete = () => {
+    if (!isOpen) {
+      setModalVisible(false);
+    }
+  };
+
   return (
-    <ActionsheetContext.Provider value={{ onClose }}>
+    <ActionsheetContext.Provider value={{ onClose, isOpen, onAnimationComplete: handleAnimationComplete }}>
       <RNModal
-        visible={isOpen}
+        visible={modalVisible}
         transparent
-        animationType="slide"
+        animationType="none"
         onRequestClose={onClose}
+        statusBarTranslucent
       >
-        <Pressable
-          className="flex-1 bg-black/60 justify-end"
-          onPress={onClose}
-        >
-          <Pressable onPress={(e) => e.stopPropagation()}>
-            {children}
-          </Pressable>
-        </Pressable>
+        <View className="flex-1 justify-end">
+          {children}
+        </View>
       </RNModal>
     </ActionsheetContext.Provider>
   );
@@ -47,14 +71,41 @@ export interface ActionsheetBackdropProps extends ViewProps {}
 
 export const ActionsheetBackdrop = forwardRef<View, ActionsheetBackdropProps>(
   ({ className, ...props }, ref) => {
-    const { onClose } = useContext(ActionsheetContext);
+    const { onClose, isOpen } = useContext(ActionsheetContext);
+    const opacity = useSharedValue(0);
+
+    useEffect(() => {
+      if (isOpen) {
+        opacity.value = withTiming(0.5, {
+          duration: 200,
+          easing: Easing.out(Easing.ease),
+        });
+      } else {
+        opacity.value = withTiming(0, {
+          duration: 200,
+          easing: Easing.in(Easing.ease),
+        });
+      }
+    }, [isOpen]);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+      opacity: opacity.value,
+    }));
+
     return (
-      <Pressable
-        ref={ref as any}
-        onPress={onClose}
-        className={`absolute inset-0 bg-black/60 ${className}`}
-        {...props}
-      />
+      <Animated.View
+        style={[
+          { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+          animatedStyle,
+        ]}
+      >
+        <Pressable
+          ref={ref as any}
+          onPress={onClose}
+          className={`flex-1 bg-black ${className}`}
+          {...props}
+        />
+      </Animated.View>
     );
   }
 );
@@ -65,15 +116,46 @@ export interface ActionsheetContentProps extends ViewProps {}
 
 export const ActionsheetContent = forwardRef<View, ActionsheetContentProps>(
   ({ className, children, ...props }, ref) => {
+    const { isOpen, onAnimationComplete } = useContext(ActionsheetContext);
+    const { height: screenHeight } = useWindowDimensions();
+    const translateY = useSharedValue(screenHeight);
+
+    useEffect(() => {
+      if (isOpen) {
+        translateY.value = withTiming(0, {
+          duration: 300,
+          easing: Easing.out(Easing.cubic),
+        });
+      } else {
+        translateY.value = withTiming(
+          screenHeight,
+          {
+            duration: 250,
+            easing: Easing.in(Easing.cubic),
+          },
+          (finished) => {
+            if (finished) {
+              runOnJS(onAnimationComplete)();
+            }
+          }
+        );
+      }
+    }, [isOpen, screenHeight]);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+      transform: [{ translateY: translateY.value }],
+    }));
+
     return (
-      <View
-        ref={ref}
+      <Animated.View
+        ref={ref as any}
+        style={animatedStyle}
         className={`bg-card rounded-t-3xl ${className}`}
         {...props}
       >
         <View className="w-10 h-1 bg-muted rounded-full self-center mt-3 mb-2" />
         {children}
-      </View>
+      </Animated.View>
     );
   }
 );
