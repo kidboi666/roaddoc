@@ -8,6 +8,7 @@ import { useSettings } from '@/shared/hooks';
 import {
   Card,
   Actionsheet,
+  ActionsheetBackdrop,
   ActionsheetContent,
   ActionsheetItem,
   ActionsheetItemText,
@@ -261,6 +262,7 @@ export default function SettingsScreen() {
       )}
 
       <Actionsheet isOpen={showSilencePicker} onClose={() => setShowSilencePicker(false)}>
+        <ActionsheetBackdrop />
         <ActionsheetContent>
           <Text className="text-lg font-bold text-foreground text-center py-4">
             침묵 감지 시간
@@ -290,6 +292,7 @@ export default function SettingsScreen() {
       </Actionsheet>
 
       <Actionsheet isOpen={showThemePicker} onClose={() => setShowThemePicker(false)}>
+        <ActionsheetBackdrop />
         <ActionsheetContent>
           <Text className="text-lg font-bold text-foreground text-center py-4">
             다크 모드
@@ -319,6 +322,7 @@ export default function SettingsScreen() {
       </Actionsheet>
 
       <Actionsheet isOpen={showVoiceAssistantGuide} onClose={() => setShowVoiceAssistantGuide(false)}>
+        <ActionsheetBackdrop />
         <ActionsheetContent>
           <Text className="text-lg font-bold text-foreground text-center py-4">
             Siri 단축어 설정 방법
