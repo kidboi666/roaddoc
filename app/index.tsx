@@ -9,6 +9,7 @@ import { useVoiceAssistant } from '@/features/voice-assistant/model/useVoiceAssi
 import { VoiceButton } from '@/features/voice-assistant/ui/VoiceButton';
 import { StatusDisplay } from '@/features/voice-assistant/ui/StatusDisplay';
 import { VOICE_CONFIG } from '@/shared/config';
+import { BannerAd } from '@/shared/ui';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -103,7 +104,7 @@ export default function HomeScreen() {
         />
       </View>
 
-      <View className="items-center pt-4 pb-6">
+      <View className="items-center pt-4 pb-4">
         <VoiceButton
           state={state}
           onPress={handlePress}
@@ -113,6 +114,8 @@ export default function HomeScreen() {
           {getHintText()}
         </Text>
       </View>
+
+      <BannerAd />
     </SafeAreaView>
   );
 }
