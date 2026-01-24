@@ -17,6 +17,7 @@ interface UseVoiceAssistantReturn {
   startListening: () => Promise<void>;
   stopListening: () => Promise<void>;
   cancel: () => Promise<void>;
+  askQuestion: (question: string) => Promise<void>;
 }
 
 export function useVoiceAssistant(): UseVoiceAssistantReturn {
@@ -34,6 +35,7 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
     setCurrentAnswer,
     setError,
     setPreviousContext,
+    addMessage,
     reset,
   } = useVoiceStore();
 
@@ -94,6 +96,7 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
 
       const question = transcriptionResult.text;
       setCurrentQuestion(question);
+      addMessage('question', question);
 
       const isFollowUp = isFollowUpCommand(question);
       const context = isFollowUp ? previousContext : null;
@@ -114,6 +117,7 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
 
       const answer = answerResult.answer;
       setCurrentAnswer(answer);
+      addMessage('answer', answer);
       setPreviousContext({ question, answer });
 
       setState('speaking');
@@ -134,6 +138,7 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
     setCurrentQuestion,
     setCurrentAnswer,
     setPreviousContext,
+    addMessage,
     previousContext,
     speak,
   ]);
@@ -173,6 +178,62 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
     reset();
   }, [isSpeaking, stopTTS, isRecording, cancelRecording, reset]);
 
+  const askQuestion = useCallback(async (question: string) => {
+    if (isProcessingRef.current || !question.trim()) return;
+    isProcessingRef.current = true;
+
+    try {
+      reset();
+      setCurrentQuestion(question);
+      addMessage('question', question);
+      setState('processing');
+      await playHaptic('processing');
+
+      const isFollowUp = isFollowUpCommand(question);
+      const context = isFollowUp ? previousContext : null;
+
+      const answerResult = await generateAnswer({
+        question,
+        previousContext: context,
+        detailed: isFollowUp,
+      });
+
+      if (!answerResult.success) {
+        setError(answerResult.error || '답변 생성에 실패했습니다.');
+        await playHaptic('error');
+        setState('idle');
+        isProcessingRef.current = false;
+        return;
+      }
+
+      const answer = answerResult.answer;
+      setCurrentAnswer(answer);
+      addMessage('answer', answer);
+      setPreviousContext({ question, answer });
+
+      setState('speaking');
+      await speak(answer);
+    } catch (err) {
+      console.error('Ask question error:', err);
+      setError('처리 중 오류가 발생했습니다.');
+      await playHaptic('error');
+      setState('idle');
+    } finally {
+      isProcessingRef.current = false;
+    }
+  }, [
+    reset,
+    setCurrentQuestion,
+    addMessage,
+    setState,
+    playHaptic,
+    previousContext,
+    setError,
+    setCurrentAnswer,
+    setPreviousContext,
+    speak,
+  ]);
+
   return {
     state,
     isRecording,
@@ -183,5 +244,6 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
     startListening,
     stopListening,
     cancel,
+    askQuestion,
   };
 }

@@ -1,55 +1,31 @@
 import { useEffect, useRef } from 'react';
-import { View, Text, ScrollView, Animated, Easing } from 'react-native';
+import { View, Text, ScrollView, Animated } from 'react-native';
 import { useSettings } from '@/shared/hooks';
+import { getChatBubbleColors, getErrorColors } from '@/shared/config';
+import { useVoiceStore, type Message } from '../model/voiceStore';
 
 interface StatusDisplayProps {
   state: 'idle' | 'recording' | 'processing' | 'speaking';
-  question: string | null;
-  answer: string | null;
   error: string | null;
 }
 
-export function StatusDisplay({ state, question, answer, error }: StatusDisplayProps) {
+export function StatusDisplay({ state, error }: StatusDisplayProps) {
   const { isDark } = useSettings();
-  const questionOpacity = useRef(new Animated.Value(0)).current;
-  const answerOpacity = useRef(new Animated.Value(0)).current;
+  const { messages } = useVoiceStore();
+  const chatColors = getChatBubbleColors(isDark);
+  const errorColors = getErrorColors(isDark);
+  const scrollViewRef = useRef<ScrollView>(null);
   const errorOpacity = useRef(new Animated.Value(0)).current;
   const dotsOpacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    if (question) {
-      questionOpacity.setValue(0);
-      Animated.timing(questionOpacity, {
-        toValue: 1,
-        duration: 300,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [question, questionOpacity]);
-
-  useEffect(() => {
-    if (answer) {
-      answerOpacity.setValue(0);
-      Animated.timing(answerOpacity, {
-        toValue: 1,
-        duration: 400,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [answer, answerOpacity]);
-
-  useEffect(() => {
     if (error) {
       errorOpacity.setValue(0);
-      Animated.sequence([
-        Animated.timing(errorOpacity, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      Animated.timing(errorOpacity, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
     }
   }, [error, errorOpacity]);
 
@@ -76,6 +52,14 @@ export function StatusDisplay({ state, question, answer, error }: StatusDisplayP
     }
   }, [state, dotsOpacity]);
 
+  useEffect(() => {
+    if (messages.length > 0) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [messages.length]);
+
   const getStatusMessage = () => {
     switch (state) {
       case 'recording':
@@ -85,34 +69,67 @@ export function StatusDisplay({ state, question, answer, error }: StatusDisplayP
       case 'speaking':
         return '답변 중...';
       default:
-        return '버튼을 눌러 질문하세요';
+        return messages.length === 0 ? '버튼을 눌러 질문하세요' : '';
     }
   };
 
   const statusMessage = getStatusMessage();
 
+  const renderMessage = (message: Message) => {
+    if (message.type === 'question') {
+      return (
+        <View
+          key={message.id}
+          style={{ backgroundColor: chatColors.question }}
+          className="rounded-2xl p-4 self-end max-w-[85%]"
+        >
+          <Text className="text-base leading-6 text-foreground">
+            {message.content}
+          </Text>
+        </View>
+      );
+    }
+
+    return (
+      <View
+        key={message.id}
+        style={{
+          backgroundColor: chatColors.answer,
+          borderColor: chatColors.answerBorder,
+        }}
+        className="rounded-2xl p-4 border self-start max-w-[85%]"
+      >
+        <Text className="text-base leading-7 text-foreground">
+          {message.content}
+        </Text>
+      </View>
+    );
+  };
+
   return (
     <View className="flex-1 w-full">
-      <Animated.Text
-        style={{ opacity: state === 'processing' ? dotsOpacity : 1 }}
-        className="text-base font-medium text-center mb-4 text-muted-foreground"
-      >
-        {statusMessage}
-      </Animated.Text>
+      {statusMessage !== '' && (
+        <Animated.Text
+          style={{ opacity: state === 'processing' ? dotsOpacity : 1 }}
+          className="text-base font-medium text-center mb-4 text-muted-foreground"
+        >
+          {statusMessage}
+        </Animated.Text>
+      )}
 
       {error && (
         <Animated.View
           style={[
             { opacity: errorOpacity },
             {
-              backgroundColor: isDark ? '#450a0a' : '#fef2f2',
-              borderColor: isDark ? '#7f1d1d' : '#fecaca',
+              backgroundColor: errorColors.background,
+              borderColor: errorColors.border,
             },
           ]}
           className="rounded-2xl p-4 border"
         >
           <Text
-            style={{ color: isDark ? '#fca5a5' : '#dc2626' }}
+            style={{ color: errorColors.text }}
             className="text-sm text-center leading-5"
           >
             {error}
@@ -120,51 +137,14 @@ export function StatusDisplay({ state, question, answer, error }: StatusDisplayP
         </Animated.View>
       )}
 
-      {(question || answer) && !error && (
+      {messages.length > 0 && !error && (
         <ScrollView
+          ref={scrollViewRef}
           className="flex-1"
           contentContainerClassName="gap-3 pb-4"
           showsVerticalScrollIndicator={false}
         >
-          {question && (
-            <Animated.View
-              style={[
-                { opacity: questionOpacity },
-                { backgroundColor: isDark ? 'rgba(64, 64, 64, 0.5)' : '#fafafa' },
-              ]}
-              className="rounded-2xl p-4"
-            >
-              <Text className="text-xs font-semibold mb-2 uppercase tracking-wider text-muted-foreground">
-                질문
-              </Text>
-              <Text className="text-base leading-6 text-foreground">
-                {question}
-              </Text>
-            </Animated.View>
-          )}
-
-          {answer && (
-            <Animated.View
-              style={[
-                { opacity: answerOpacity },
-                {
-                  backgroundColor: isDark ? 'rgba(23, 37, 84, 0.5)' : '#eff6ff',
-                  borderColor: isDark ? '#1e3a8a' : '#dbeafe',
-                },
-              ]}
-              className="rounded-2xl p-4 border"
-            >
-              <Text
-                style={{ color: isDark ? '#93c5fd' : '#3b82f6' }}
-                className="text-xs font-semibold mb-2 uppercase tracking-wider"
-              >
-                답변
-              </Text>
-              <Text className="text-base leading-7 text-foreground">
-                {answer}
-              </Text>
-            </Animated.View>
-          )}
+          {messages.map(renderMessage)}
         </ScrollView>
       )}
     </View>
