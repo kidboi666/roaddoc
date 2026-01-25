@@ -1,16 +1,10 @@
 import { useEffect, useMemo } from 'react';
-import { useColorScheme } from 'react-native';
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { VOICE_CONFIG, type ThemeMode } from '@/shared/config';
+import { VOICE_CONFIG } from '@/shared/config/constants';
 
-const STORAGE_KEYS = {
-  ONBOARDING_COMPLETED: '@roaddoc/onboarding_completed',
-  DISCLAIMER_ACCEPTED: '@roaddoc/disclaimer_accepted',
-  TTS_SPEED: '@roaddoc/tts_speed',
-  SILENCE_TIMEOUT: '@roaddoc/silence_timeout',
-  THEME_MODE: '@roaddoc/theme_mode',
-} as const;
+export type ThemeMode = 'system' | 'light' | 'dark';
+export type ColorScheme = 'light' | 'dark';
 
 export interface Settings {
   onboardingCompleted: boolean;
@@ -23,7 +17,6 @@ export interface Settings {
 interface SettingsState {
   settings: Settings;
   isLoading: boolean;
-  isInitialized: boolean;
   loadSettings: () => Promise<void>;
   setOnboardingCompleted: (value: boolean) => Promise<void>;
   setDisclaimerAccepted: (value: boolean) => Promise<void>;
@@ -31,6 +24,16 @@ interface SettingsState {
   setSilenceTimeout: (value: number) => Promise<void>;
   setThemeMode: (value: ThemeMode) => Promise<void>;
 }
+
+const STORAGE_PREFIX = '@roaddoc';
+
+const STORAGE_KEYS = {
+  ONBOARDING_COMPLETED: `${STORAGE_PREFIX}/onboarding_completed`,
+  DISCLAIMER_ACCEPTED: `${STORAGE_PREFIX}/disclaimer_accepted`,
+  TTS_SPEED: `${STORAGE_PREFIX}/tts_speed`,
+  SILENCE_TIMEOUT: `${STORAGE_PREFIX}/silence_timeout`,
+  THEME_MODE: `${STORAGE_PREFIX}/theme_mode`,
+} as const;
 
 const DEFAULT_SETTINGS: Settings = {
   onboardingCompleted: false,
@@ -40,13 +43,12 @@ const DEFAULT_SETTINGS: Settings = {
   themeMode: 'system',
 };
 
-const useSettingsStore = create<SettingsState>((set, get) => ({
+export const useSettingsStore = create<SettingsState>((set, get) => ({
   settings: DEFAULT_SETTINGS,
   isLoading: true,
-  isInitialized: false,
 
   loadSettings: async () => {
-    if (get().isInitialized) return;
+    if (!get().isLoading) return;
 
     try {
       const [
@@ -74,11 +76,10 @@ const useSettingsStore = create<SettingsState>((set, get) => ({
           themeMode: (themeMode as ThemeMode) || DEFAULT_SETTINGS.themeMode,
         },
         isLoading: false,
-        isInitialized: true,
       });
     } catch (error) {
       console.error('Failed to load settings:', error);
-      set({ isLoading: false, isInitialized: true });
+      set({ isLoading: false });
     }
   },
 
@@ -118,32 +119,40 @@ const useSettingsStore = create<SettingsState>((set, get) => ({
   },
 }));
 
-export function useSettings() {
-  const store = useSettingsStore();
-  const systemColorScheme = useColorScheme();
+export function useSettings(systemColorScheme?: ColorScheme | null) {
+  const {
+    settings,
+    isLoading,
+    loadSettings,
+    setOnboardingCompleted,
+    setDisclaimerAccepted,
+    setTtsSpeed,
+    setSilenceTimeout,
+    setThemeMode,
+  } = useSettingsStore();
 
   useEffect(() => {
-    store.loadSettings();
-  }, []);
+    loadSettings();
+  }, [loadSettings]);
 
-  const effectiveColorScheme = useMemo(() => {
-    if (store.settings.themeMode === 'system') {
+  const effectiveColorScheme = useMemo((): ColorScheme => {
+    if (settings.themeMode === 'system') {
       return systemColorScheme ?? 'light';
     }
-    return store.settings.themeMode;
-  }, [store.settings.themeMode, systemColorScheme]);
+    return settings.themeMode;
+  }, [settings.themeMode, systemColorScheme]);
 
   const isDark = effectiveColorScheme === 'dark';
 
   return {
-    settings: store.settings,
-    isLoading: store.isLoading,
+    settings,
+    isLoading,
     effectiveColorScheme,
     isDark,
-    setOnboardingCompleted: store.setOnboardingCompleted,
-    setDisclaimerAccepted: store.setDisclaimerAccepted,
-    setTtsSpeed: store.setTtsSpeed,
-    setSilenceTimeout: store.setSilenceTimeout,
-    setThemeMode: store.setThemeMode,
+    setOnboardingCompleted,
+    setDisclaimerAccepted,
+    setTtsSpeed,
+    setSilenceTimeout,
+    setThemeMode,
   };
 }

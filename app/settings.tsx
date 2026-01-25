@@ -3,7 +3,7 @@ import { View, Text, ScrollView, Pressable, Alert, Platform } from 'react-native
 import { useRouter } from 'expo-router';
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
-import { APP_INFO, VOICE_CONFIG, type ThemeMode } from '@/shared/config';
+import {APP_INFO, VOICE_CONFIG, type ThemeMode, getColors, Colors} from '@/shared/config';
 import { useSettings } from '@/shared/hooks';
 import {
   Card,
@@ -41,6 +41,8 @@ export default function SettingsScreen() {
     setOnboardingCompleted,
     setDisclaimerAccepted,
   } = useSettings();
+
+  const colors = getColors(isDark);
 
   const [showSilencePicker, setShowSilencePicker] = useState(false);
   const [showThemePicker, setShowThemePicker] = useState(false);
@@ -119,9 +121,9 @@ export default function SettingsScreen() {
               step={0.1}
               value={settings.ttsSpeed}
               onSlidingComplete={setTtsSpeed}
-              minimumTrackTintColor="#3B82F6"
-              maximumTrackTintColor={isDark ? '#404040' : '#E5E5E5'}
-              thumbTintColor="#3B82F6"
+              minimumTrackTintColor={Colors.primary}
+              maximumTrackTintColor={colors.border}
+              thumbTintColor={Colors.primary}
             />
             <View className="flex-row justify-between mt-1 px-1">
               <Text className="text-xs text-muted-foreground">느림</Text>
@@ -146,7 +148,7 @@ export default function SettingsScreen() {
               <Text className="text-base text-muted-foreground mr-1">
                 {currentSilenceLabel}
               </Text>
-              <Ionicons name="chevron-forward" size={18} color={isDark ? '#525252' : '#A3A3A3'} />
+              <Ionicons name="chevron-forward" size={18} color={colors.muted} />
             </View>
           </Pressable>
         </Card>
@@ -210,7 +212,7 @@ export default function SettingsScreen() {
               <Text className="text-base text-muted-foreground mr-1">
                 {currentThemeLabel}
               </Text>
-              <Ionicons name="chevron-forward" size={18} color={isDark ? '#525252' : '#A3A3A3'} />
+              <Ionicons name="chevron-forward" size={18} color={colors.muted} />
             </View>
           </Pressable>
         </Card>
@@ -225,7 +227,7 @@ export default function SettingsScreen() {
           <View className="flex-row justify-between items-center">
             <View className="flex-row items-center">
               <View className="w-8 h-8 rounded-lg bg-secondary items-center justify-center mr-3">
-                <Ionicons name="information-outline" size={18} color={isDark ? '#A3A3A3' : '#525252'} />
+                <Ionicons name="information-outline" size={18} color={colors.icon} />
               </View>
               <Text className="text-base text-foreground">버전</Text>
             </View>
@@ -313,7 +315,7 @@ export default function SettingsScreen() {
                   {option.label}
                 </ActionsheetItemText>
                 {settings.themeMode === option.value && (
-                  <Ionicons name="checkmark" size={22} color="#3B82F6" style={{ marginLeft: 'auto' }} />
+                  <Ionicons name="checkmark" size={22} color={Colors.primary} style={{ marginLeft: 'auto' }} />
                 )}
               </ActionsheetItem>
             ))}

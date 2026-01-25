@@ -14,7 +14,7 @@ export const useAutoStartStore = create<AutoStartState>((set) => ({
 
 export function useAutoStart() {
   const { shouldAutoStartRecording, setShouldAutoStartRecording, clearAutoStart } =
-    useAutoStartStore();
+      useAutoStartStore();
 
   return {
     shouldAutoStartRecording,

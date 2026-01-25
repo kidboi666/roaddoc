@@ -1,5 +1,5 @@
-import { VOICE_CONFIG, OPENAI_CONFIG } from '@/shared/config';
 import { parseHttpStatus } from '@/shared/api/errorHandler';
+import { getVoiceConfig } from '../config';
 import { getAudioFileExtension, getAudioMimeType } from '../model/useAudioRecorder';
 
 interface TranscribeResult {
@@ -37,10 +37,11 @@ function isLikelyHallucination(text: string): boolean {
 }
 
 export async function transcribeAudio(audioUri: string): Promise<TranscribeResult> {
+  const config = getVoiceConfig();
   let retryCount = 0;
   let lastError: string | undefined;
 
-  while (retryCount < OPENAI_CONFIG.retryCount) {
+  while (retryCount < config.retryCount) {
     try {
       const formData = new FormData();
 
@@ -51,9 +52,12 @@ export async function transcribeAudio(audioUri: string): Promise<TranscribeResul
       } as unknown as Blob);
 
       formData.append('model', 'whisper-1');
-      formData.append('language', VOICE_CONFIG.language.split('-')[0]);
+      formData.append('language', config.language.split('-')[0]);
       formData.append('response_format', 'text');
-      formData.append('prompt', '도로교통법, 운전, 교통법규, 신호, 속도, 벌금, 벌점, 면허');
+
+      if (config.whisperPrompt) {
+        formData.append('prompt', config.whisperPrompt);
+      }
 
       const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
         method: 'POST',
@@ -121,7 +125,7 @@ export async function transcribeAudio(audioUri: string): Promise<TranscribeResul
         console.error(`[Transcribe] Attempt ${retryCount} failed:`, error);
       }
 
-      if (retryCount >= OPENAI_CONFIG.retryCount) {
+      if (retryCount >= config.retryCount) {
         return {
           text: '',
           success: false,

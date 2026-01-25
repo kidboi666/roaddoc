@@ -23,7 +23,11 @@ export const OPENAI_CONFIG = {
   retryCount: 3,
 } as const;
 
-export type VoiceStatus = 'idle' | 'recording' | 'processing' | 'speaking';
+export const USAGE_LIMIT_CONFIG = {
+  freeLimit: 10,
+  premiumLimit: -1,
+  storageKeyPrefix: '@roaddoc/usage',
+} as const;
 
 export type ThemeMode = 'system' | 'light' | 'dark';
 

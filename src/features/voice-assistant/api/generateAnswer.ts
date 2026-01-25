@@ -1,6 +1,6 @@
-import { openai } from '@/shared/api/openai';
-import { SYSTEM_PROMPT, OPENAI_CONFIG } from '@/shared/config';
+import { getOpenAIClient } from '@/shared/api/openai';
 import { parseApiError } from '@/shared/api/errorHandler';
+import { getVoiceConfig } from '../config';
 
 interface GenerateAnswerOptions {
   question: string;
@@ -19,14 +19,16 @@ interface GenerateAnswerResult {
 
 export async function generateAnswer(options: GenerateAnswerOptions): Promise<GenerateAnswerResult> {
   const { question, previousContext, detailed = false } = options;
+  const config = getVoiceConfig();
+  const openai = getOpenAIClient();
 
   let retryCount = 0;
   let lastError: string | undefined;
 
-  while (retryCount < OPENAI_CONFIG.retryCount) {
+  while (retryCount < config.retryCount) {
     try {
       const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
-        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'system', content: config.systemPrompt },
       ];
 
       if (previousContext) {
@@ -39,10 +41,10 @@ export async function generateAnswer(options: GenerateAnswerOptions): Promise<Ge
       messages.push({ role: 'user', content: question });
 
       const response = await openai.chat.completions.create({
-        model: OPENAI_CONFIG.model,
+        model: config.model,
         messages,
-        temperature: OPENAI_CONFIG.temperature,
-        max_tokens: detailed ? OPENAI_CONFIG.maxTokensDetailed : OPENAI_CONFIG.maxTokens,
+        temperature: config.temperature,
+        max_tokens: detailed ? config.maxTokensDetailed : config.maxTokens,
       });
 
       const answer = response.choices[0]?.message?.content;
@@ -81,7 +83,7 @@ export async function generateAnswer(options: GenerateAnswerOptions): Promise<Ge
 
       lastError = errorInfo.userMessage;
 
-      if (retryCount >= OPENAI_CONFIG.retryCount) {
+      if (retryCount >= config.retryCount) {
         return {
           answer: '',
           success: false,

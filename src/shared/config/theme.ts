@@ -5,22 +5,62 @@ export const Colors = {
   error: '#ef4444',
   success: '#22c55e',
   warning: '#f59e0b',
+  orange: '#f97316',
+  purple: '#8b5cf6',
 
   light: {
-    text: '#1a1a1a',
-    textSecondary: '#666666',
-    background: '#f5f5f5',
+    background: '#fafafa',
+    foreground: '#171717',
     card: '#ffffff',
-    border: '#e0e0e0',
+    secondary: '#f5f5f5',
+    muted: '#a3a3a3',
+    mutedForeground: '#737373',
+    border: '#e5e5e5',
+    icon: '#525252',
   },
   dark: {
-    text: '#f5f5f5',
-    textSecondary: '#a0a0a0',
-    background: '#121212',
-    card: '#1e1e1e',
-    border: '#333333',
+    background: '#171717',
+    foreground: '#fafafa',
+    card: '#262626',
+    secondary: '#262626',
+    muted: '#525252',
+    mutedForeground: '#a3a3a3',
+    border: '#404040',
+    icon: '#a3a3a3',
   },
 } as const;
+
+export const getColors = (isDark: boolean) => isDark ? Colors.dark : Colors.light;
+
+export const ChatBubbleColors = {
+  light: {
+    question: '#fafafa',
+    answer: '#eff6ff',
+    answerBorder: '#dbeafe',
+  },
+  dark: {
+    question: 'rgba(64, 64, 64, 0.5)',
+    answer: 'rgba(23, 37, 84, 0.5)',
+    answerBorder: '#1e3a8a',
+  },
+} as const;
+
+export const ErrorColors = {
+  light: {
+    background: '#fef2f2',
+    border: '#fecaca',
+    text: '#dc2626',
+  },
+  dark: {
+    background: '#450a0a',
+    border: '#7f1d1d',
+    text: '#fca5a5',
+  },
+} as const;
+
+export const getChatBubbleColors = (isDark: boolean) => isDark ? ChatBubbleColors.dark : ChatBubbleColors.light;
+export const getErrorColors = (isDark: boolean) => isDark ? ErrorColors.dark : ErrorColors.light;
+
 
 export const themeVars = {
   light: vars({

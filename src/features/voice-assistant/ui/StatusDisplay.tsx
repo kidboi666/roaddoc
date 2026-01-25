@@ -1,172 +1,153 @@
-import { useEffect, useRef } from 'react';
-import { View, Text, ScrollView, Animated, Easing } from 'react-native';
-import { useSettings } from '@/shared/hooks';
+import {useEffect, useRef, memo,} from 'react';
+import {View, Text, ScrollView, Animated} from 'react-native';
+import {useVoiceMessages, type Message} from '../model/voiceStore';
+import {getChatBubbleColors, getErrorColors} from "@/shared/config";
 
 interface StatusDisplayProps {
   state: 'idle' | 'recording' | 'processing' | 'speaking';
-  question: string | null;
-  answer: string | null;
   error: string | null;
+  isDark: boolean;
 }
 
-export function StatusDisplay({ state, question, answer, error }: StatusDisplayProps) {
-  const { isDark } = useSettings();
-  const questionOpacity = useRef(new Animated.Value(0)).current;
-  const answerOpacity = useRef(new Animated.Value(0)).current;
+function StatusDisplayComponent({state, error, isDark}: StatusDisplayProps) {
+  const messages = useVoiceMessages();
+  const chatColors = getChatBubbleColors(isDark);
+  const errorColors = getErrorColors(isDark);
+  const scrollViewRef = useRef<ScrollView>(null);
   const errorOpacity = useRef(new Animated.Value(0)).current;
   const dotsOpacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    if (question) {
-      questionOpacity.setValue(0);
-      Animated.timing(questionOpacity, {
-        toValue: 1,
-        duration: 300,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [question, questionOpacity]);
-
-  useEffect(() => {
-    if (answer) {
-      answerOpacity.setValue(0);
-      Animated.timing(answerOpacity, {
-        toValue: 1,
-        duration: 400,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [answer, answerOpacity]);
-
-  useEffect(() => {
     if (error) {
       errorOpacity.setValue(0);
-      Animated.sequence([
-        Animated.timing(errorOpacity, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      Animated.timing(errorOpacity, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
     }
   }, [error, errorOpacity]);
 
   useEffect(() => {
     if (state === 'processing') {
-      const animation = Animated.loop(
-        Animated.sequence([
-          Animated.timing(dotsOpacity, {
-            toValue: 0.3,
-            duration: 500,
-            useNativeDriver: true,
-          }),
-          Animated.timing(dotsOpacity, {
-            toValue: 1,
-            duration: 500,
-            useNativeDriver: true,
-          }),
-        ])
+      const blinkAnimation = Animated.loop(
+          Animated.sequence([
+            Animated.timing(dotsOpacity, {
+              toValue: 0.3,
+              duration: 500,
+              useNativeDriver: true,
+            }),
+            Animated.timing(dotsOpacity, {
+              toValue: 1,
+              duration: 500,
+              useNativeDriver: true,
+            }),
+          ])
       );
-      animation.start();
-      return () => animation.stop();
+      blinkAnimation.start();
+      return () => blinkAnimation.stop();
     } else {
       dotsOpacity.setValue(1);
     }
   }, [state, dotsOpacity]);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({animated: true});
+      }, 100);
+    }
+  }, [messages.length]);
 
   const getStatusMessage = () => {
     switch (state) {
       case 'recording':
         return '듣고 있습니다...';
       case 'processing':
-        return '답변을 준비하고 있습니다';
+        return '생각 중...';
       case 'speaking':
         return '답변 중...';
       default:
-        return '버튼을 눌러 질문하세요';
+        return messages.length === 0 ? '버튼을 눌러 질문하세요' : '';
     }
   };
 
   const statusMessage = getStatusMessage();
 
-  return (
-    <View className="flex-1 w-full">
-      <Animated.Text
-        style={{ opacity: state === 'processing' ? dotsOpacity : 1 }}
-        className="text-base font-medium text-center mb-4 text-muted-foreground"
-      >
-        {statusMessage}
-      </Animated.Text>
-
-      {error && (
-        <Animated.View
-          style={[
-            { opacity: errorOpacity },
-            {
-              backgroundColor: isDark ? '#450a0a' : '#fef2f2',
-              borderColor: isDark ? '#7f1d1d' : '#fecaca',
-            },
-          ]}
-          className="rounded-2xl p-4 border"
-        >
-          <Text
-            style={{ color: isDark ? '#fca5a5' : '#dc2626' }}
-            className="text-sm text-center leading-5"
+  const renderMessage = (message: Message) => {
+    if (message.type === 'question') {
+      return (
+          <View
+              key={message.id}
+              style={{backgroundColor: chatColors.question}}
+              className="rounded-2xl p-4 self-end max-w-[85%]"
           >
-            {error}
-          </Text>
-        </Animated.View>
-      )}
+            <Text className="text-base leading-6 text-foreground">
+              {message.content}
+            </Text>
+          </View>
+      );
+    }
 
-      {(question || answer) && !error && (
-        <ScrollView
-          className="flex-1"
-          contentContainerClassName="gap-3 pb-4"
-          showsVerticalScrollIndicator={false}
+    return (
+        <View
+            key={message.id}
+            style={{
+              backgroundColor: chatColors.answer,
+              borderColor: chatColors.answerBorder,
+            }}
+            className="rounded-2xl p-4 border self-start max-w-[85%]"
         >
-          {question && (
-            <Animated.View
-              style={[
-                { opacity: questionOpacity },
-                { backgroundColor: isDark ? 'rgba(64, 64, 64, 0.5)' : '#fafafa' },
-              ]}
-              className="rounded-2xl p-4"
-            >
-              <Text className="text-xs font-semibold mb-2 uppercase tracking-wider text-muted-foreground">
-                질문
-              </Text>
-              <Text className="text-base leading-6 text-foreground">
-                {question}
-              </Text>
-            </Animated.View>
-          )}
+          <Text className="text-base leading-7 text-foreground">
+            {message.content}
+          </Text>
+        </View>
+    );
+  };
 
-          {answer && (
+  return (
+      <View className="flex-1 w-full">
+        {statusMessage !== '' && (
+            <Animated.Text
+                style={{opacity: state === 'processing' ? dotsOpacity : 1}}
+                className="text-base font-medium text-center mb-4 text-muted-foreground"
+            >
+              {statusMessage}
+            </Animated.Text>
+        )}
+
+        {error && (
             <Animated.View
-              style={[
-                { opacity: answerOpacity },
-                {
-                  backgroundColor: isDark ? 'rgba(23, 37, 84, 0.5)' : '#eff6ff',
-                  borderColor: isDark ? '#1e3a8a' : '#dbeafe',
-                },
-              ]}
-              className="rounded-2xl p-4 border"
+                style={[
+                  {opacity: errorOpacity},
+                  {
+                    backgroundColor: errorColors.background,
+                    borderColor: errorColors.border,
+                  },
+                ]}
+                className="rounded-2xl p-4 border"
             >
               <Text
-                style={{ color: isDark ? '#93c5fd' : '#3b82f6' }}
-                className="text-xs font-semibold mb-2 uppercase tracking-wider"
+                  style={{color: errorColors.text}}
+                  className="text-sm text-center leading-5"
               >
-                답변
-              </Text>
-              <Text className="text-base leading-7 text-foreground">
-                {answer}
+                {error}
               </Text>
             </Animated.View>
-          )}
-        </ScrollView>
-      )}
-    </View>
+        )}
+
+        {messages.length > 0 && !error && (
+            <ScrollView
+                ref={scrollViewRef}
+                className="flex-1"
+                contentContainerClassName="gap-3 pb-4"
+                showsVerticalScrollIndicator={false}
+            >
+              {messages.map(renderMessage)}
+            </ScrollView>
+        )}
+      </View>
   );
 }
+
+export const StatusDisplay = memo(StatusDisplayComponent);
