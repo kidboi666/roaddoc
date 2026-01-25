@@ -9,9 +9,8 @@ export const Colors = {
   purple: '#8b5cf6',
 
   light: {
-    text: '#1a1a1a',
-    textSecondary: '#666666',
-    background: '#f5f5f5',
+    background: '#fafafa',
+    foreground: '#171717',
     card: '#ffffff',
     secondary: '#f5f5f5',
     muted: '#a3a3a3',
