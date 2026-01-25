@@ -1,31 +1,30 @@
-import { useEffect, useRef } from 'react';
-import { Pressable, View, Text } from 'react-native';
-import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useEffect, useRef, useState } from 'react';
+import { View, Text, Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Speech from 'expo-speech';
 import { useSettings, useAutoStart } from '@/shared/hooks';
 import { useVoiceAssistant } from '@/features/voice-assistant/model/useVoiceAssistant';
 import { VoiceButton } from '@/features/voice-assistant/ui/VoiceButton';
 import { StatusDisplay } from '@/features/voice-assistant/ui/StatusDisplay';
-import { VOICE_CONFIG } from '@/shared/config';
-import { BannerAd } from '@/shared/ui';
+import { VOICE_CONFIG, getColors } from '@/shared/config';
+import { BannerAd, Input, InputIcon } from '@/shared/ui';
 
 export default function HomeScreen() {
-  const router = useRouter();
   const { isDark, settings } = useSettings();
+  const colors = getColors(isDark);
   const { shouldAutoStartRecording, clearAutoStart } = useAutoStart();
   const autoStartHandledRef = useRef(false);
 
   const {
     state,
-    currentQuestion,
-    currentAnswer,
     error,
     startListening,
     stopListening,
     cancel,
+    askQuestion,
   } = useVoiceAssistant();
+
+  const [textInput, setTextInput] = useState('');
 
   useEffect(() => {
     if (shouldAutoStartRecording && state === 'idle' && !autoStartHandledRef.current) {
@@ -80,42 +79,57 @@ export default function HomeScreen() {
     }
   };
 
+  const handleSendText = () => {
+    if (!textInput.trim() || state !== 'idle') return;
+    Keyboard.dismiss();
+    askQuestion(textInput.trim());
+    setTextInput('');
+  };
+
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      <View className="flex-row items-center justify-end px-5 py-3">
-        <Pressable
-          onPress={() => router.push('/settings')}
-          className="w-10 h-10 items-center justify-center rounded-full bg-secondary active:opacity-70"
-        >
-          <Ionicons
-            name="settings-outline"
-            size={22}
-            color={isDark ? '#a3a3a3' : '#525252'}
+    <View className="flex-1 bg-background">
+      <View className="flex-1">
+        <View className="flex-1 px-5 py-3">
+          <StatusDisplay
+            state={state}
+            error={error}
           />
-        </Pressable>
-      </View>
+        </View>
 
-      <View className="flex-1 px-5 py-3">
-        <StatusDisplay
-          state={state}
-          question={currentQuestion}
-          answer={currentAnswer}
-          error={error}
-        />
-      </View>
+        <View className="items-center pt-4 pb-2">
+          <VoiceButton
+            state={state}
+            onPress={handlePress}
+            onLongPress={handleLongPress}
+          />
+          <Text className="text-sm text-muted-foreground mt-3 h-5">
+            {getHintText()}
+          </Text>
+        </View>
 
-      <View className="items-center pt-4 pb-4">
-        <VoiceButton
-          state={state}
-          onPress={handlePress}
-          onLongPress={handleLongPress}
-        />
-        <Text className="text-sm text-muted-foreground mt-3 h-5">
-          {getHintText()}
-        </Text>
+        <View className="px-5 pb-4">
+          <Input
+            variant="filled"
+            placeholder="텍스트로 질문하기..."
+            value={textInput}
+            onChangeText={setTextInput}
+            onSubmitEditing={handleSendText}
+            returnKeyType="send"
+            isDisabled={state !== 'idle'}
+            rightElement={
+              <InputIcon onPress={handleSendText}>
+                <Ionicons
+                  name="send"
+                  size={20}
+                  color={textInput.trim() && state === 'idle' ? colors.foreground : colors.muted}
+                />
+              </InputIcon>
+            }
+          />
+        </View>
       </View>
 
       <BannerAd />
-    </SafeAreaView>
+    </View>
   );
 }

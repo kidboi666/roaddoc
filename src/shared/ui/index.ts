@@ -5,4 +5,5 @@ export * from './card';
 export * from './modal';
 export * from './actionsheet';
 export * from './text';
+export * from './input';
 export * from './BannerAd';

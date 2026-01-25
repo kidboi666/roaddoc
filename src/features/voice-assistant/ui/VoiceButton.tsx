@@ -2,6 +2,7 @@ import { useRef, useEffect } from 'react';
 import { Pressable, View, Animated, StyleSheet, Easing } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSettings } from '@/shared/hooks';
+import { Colors } from '@/shared/config';
 
 interface VoiceButtonProps {
   state: 'idle' | 'recording' | 'processing' | 'speaking';
@@ -13,16 +14,16 @@ interface VoiceButtonProps {
 const BUTTON_COLORS = {
   idle: {
     light: '#FFFFFF',
-    dark: '#3B82F6',
+    dark: Colors.primary,
   },
-  recording: '#EF4444',
+  recording: Colors.error,
   processing: '#6B7280',
-  speaking: '#10B981',
+  speaking: Colors.success,
 };
 
 const ICON_COLORS = {
   idle: {
-    light: '#3B82F6',
+    light: Colors.primary,
     dark: '#FFFFFF',
   },
   default: '#FFFFFF',
@@ -274,7 +275,7 @@ const styles = StyleSheet.create({
   },
   idleLightButton: {
     borderWidth: 2,
-    borderColor: '#3B82F6',
+    borderColor: Colors.primary,
   },
   buttonPressed: {
     transform: [{ scale: 0.95 }],

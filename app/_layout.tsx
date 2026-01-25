@@ -4,9 +4,10 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View, Text, ActivityIndicator } from 'react-native';
 import * as Linking from 'expo-linking';
-import { GluestackUIProvider } from '@/shared/ui';
+import { X, Settings } from 'lucide-react-native';
+import { GluestackUIProvider, Button, ButtonIcon } from '@/shared/ui';
 import { useSettings, useAutoStart } from '@/shared/hooks';
-import { APP_INFO } from '@/shared/config';
+import { APP_INFO, getColors } from '@/shared/config';
 
 export default function RootLayout() {
   const router = useRouter();
@@ -41,6 +42,8 @@ export default function RootLayout() {
     }
   }, [isLoading, settings.onboardingCompleted, settings.disclaimerAccepted, segments, router]);
 
+  const colors = getColors(isDark);
+
   if (isLoading) {
     return (
       <GluestackUIProvider mode={effectiveColorScheme}>
@@ -51,7 +54,7 @@ export default function RootLayout() {
           </Text>
           <ActivityIndicator
             size="small"
-            color={isDark ? '#a3a3a3' : '#525252'}
+            color={colors.icon}
             className="mt-4"
           />
         </View>
@@ -65,8 +68,12 @@ export default function RootLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
+          headerStyle: {
+            backgroundColor: colors.background,
+          },
+          headerTintColor: colors.icon,
           contentStyle: {
-            backgroundColor: isDark ? '#171717' : '#f5f5f5',
+            backgroundColor: colors.background,
           },
           animation: 'fade',
           animationDuration: 200,
@@ -76,6 +83,19 @@ export default function RootLayout() {
           name="index"
           options={{
             animation: 'fade',
+            headerShown: true,
+            headerTitle: '',
+            headerShadowVisible: false,
+            headerRight: ({ tintColor }) => (
+              <Button
+                variant="ghost"
+                size="sm"
+                onPress={() => router.push('/settings')}
+                className="px-2"
+              >
+                <ButtonIcon as={Settings} size={22} color={tintColor} />
+              </Button>
+            ),
           }}
         />
         <Stack.Screen
@@ -89,14 +109,21 @@ export default function RootLayout() {
           options={{
             presentation: 'modal',
             headerShown: true,
-            headerTitle: '설정',
-            headerStyle: {
-              backgroundColor: isDark ? '#262626' : '#ffffff',
-            },
-            headerTintColor: isDark ? '#f5f5f5' : '#171717',
+            title: '설정',
             headerShadowVisible: false,
             animation: 'slide_from_bottom',
             animationDuration: 250,
+            headerLeft: () => null,
+            headerRight: ({ tintColor }) => (
+              <Button
+                variant="ghost"
+                size="sm"
+                onPress={() => router.back()}
+                className="px-2"
+              >
+                <ButtonIcon as={X} size={24} color={tintColor} />
+              </Button>
+            ),
           }}
         />
       </Stack>

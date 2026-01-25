@@ -90,7 +90,7 @@ export default function OnboardingScreen() {
           transform: [{ translateY: slideAnim }],
         }}
       >
-        <View className="w-24 h-24 rounded-3xl bg-primary items-center justify-center mb-8 shadow-lg">
+        <View className="w-24 h-24 rounded-3xl items-center justify-center mb-8 shadow-lg">
           <Text className="text-5xl">🚗</Text>
         </View>
 
