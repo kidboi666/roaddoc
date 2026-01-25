@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import type { VoiceStatus } from '@/shared/config';
+import { useShallow } from 'zustand/react/shallow';
+import type { VoiceStatus } from '../config';
 
 interface PreviousContext {
   question: string;
@@ -20,6 +21,9 @@ interface VoiceState {
   previousContext: PreviousContext | null;
   messages: Message[];
   error: string | null;
+}
+
+interface VoiceActions {
   setState: (state: VoiceStatus) => void;
   setCurrentQuestion: (question: string | null) => void;
   setCurrentAnswer: (answer: string | null) => void;
@@ -30,7 +34,9 @@ interface VoiceState {
   reset: () => void;
 }
 
-export const useVoiceStore = create<VoiceState>((set) => ({
+type VoiceStore = VoiceState & VoiceActions;
+
+const voiceStore = create<VoiceStore>((set) => ({
   state: 'idle',
   currentQuestion: null,
   currentAnswer: null,
@@ -47,27 +53,57 @@ export const useVoiceStore = create<VoiceState>((set) => ({
   setPreviousContext: (previousContext) => set({ previousContext }),
 
   addMessage: (type, content) =>
-    set((state) => ({
-      messages: [
-        ...state.messages,
-        {
-          id: `${Date.now()}-${type}`,
-          type,
-          content,
-          timestamp: Date.now(),
-        },
-      ],
-    })),
+      set((s) => ({
+        messages: [
+          ...s.messages,
+          {
+            id: `${Date.now()}-${type}`,
+            type,
+            content,
+            timestamp: Date.now(),
+          },
+        ],
+      })),
 
   clearMessages: () => set({ messages: [] }),
 
   setError: (error) => set({ error }),
 
   reset: () =>
-    set({
-      state: 'idle',
-      currentQuestion: null,
-      currentAnswer: null,
-      error: null,
-    }),
+      set({
+        state: 'idle',
+        currentQuestion: null,
+        currentAnswer: null,
+        error: null,
+      }),
 }));
+
+export const useVoiceState = () =>
+    voiceStore(
+        useShallow((s) => ({
+          state: s.state,
+          currentQuestion: s.currentQuestion,
+          currentAnswer: s.currentAnswer,
+          error: s.error,
+        }))
+    );
+
+export const useVoiceMessages = () => voiceStore((s) => s.messages);
+
+export const usePreviousContext = () => voiceStore((s) => s.previousContext);
+
+export const useVoiceActions = () =>
+    voiceStore(
+        useShallow((s) => ({
+          setState: s.setState,
+          setCurrentQuestion: s.setCurrentQuestion,
+          setCurrentAnswer: s.setCurrentAnswer,
+          setPreviousContext: s.setPreviousContext,
+          addMessage: s.addMessage,
+          clearMessages: s.clearMessages,
+          setError: s.setError,
+          reset: s.reset,
+        }))
+    );
+
+export const useVoiceStore = voiceStore;

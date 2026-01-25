@@ -61,6 +61,7 @@ export const ErrorColors = {
 export const getChatBubbleColors = (isDark: boolean) => isDark ? ChatBubbleColors.dark : ChatBubbleColors.light;
 export const getErrorColors = (isDark: boolean) => isDark ? ErrorColors.dark : ErrorColors.light;
 
+
 export const themeVars = {
   light: vars({
     '--color-background': '250 250 250',

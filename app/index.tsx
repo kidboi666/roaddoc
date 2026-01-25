@@ -1,13 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
-import { View, Text, Keyboard } from 'react-native';
+import {useEffect, useRef, useState} from 'react';
+import { View, Text, Keyboard} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Speech from 'expo-speech';
 import { useSettings, useAutoStart } from '@/shared/hooks';
 import { useVoiceAssistant } from '@/features/voice-assistant/model/useVoiceAssistant';
 import { VoiceButton } from '@/features/voice-assistant/ui/VoiceButton';
 import { StatusDisplay } from '@/features/voice-assistant/ui/StatusDisplay';
-import { VOICE_CONFIG, getColors } from '@/shared/config';
-import { BannerAd, Input, InputIcon } from '@/shared/ui';
+import {getColors, VOICE_CONFIG} from '@/shared/config';
+import { BannerAd } from '@/shared/ui';
+import {Input, InputIcon} from "@/shared/ui/input";
 
 export default function HomeScreen() {
   const { isDark, settings } = useSettings();
@@ -21,9 +22,8 @@ export default function HomeScreen() {
     startListening,
     stopListening,
     cancel,
-    askQuestion,
+      askQuestion
   } = useVoiceAssistant();
-
   const [textInput, setTextInput] = useState('');
 
   useEffect(() => {
@@ -87,49 +87,51 @@ export default function HomeScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background">
-      <View className="flex-1">
-        <View className="flex-1 px-5 py-3">
-          <StatusDisplay
-            state={state}
-            error={error}
-          />
+      <View className="flex-1 bg-background">
+        <View className="flex-1">
+          <View className="flex-1 px-5 py-3">
+            <StatusDisplay
+                state={state}
+                error={error}
+                isDark={isDark}
+            />
+          </View>
+
+          <View className="items-center pt-4 pb-2">
+            <VoiceButton
+                state={state}
+                isDark={isDark}
+                onPress={handlePress}
+                onLongPress={handleLongPress}
+            />
+            <Text className="text-sm text-muted-foreground mt-3 h-5">
+              {getHintText()}
+            </Text>
+          </View>
+
+          <View className="px-5 pb-4">
+            <Input
+                variant="filled"
+                placeholder="텍스트로 질문하기..."
+                value={textInput}
+                onChangeText={setTextInput}
+                onSubmitEditing={handleSendText}
+                returnKeyType="send"
+                isDisabled={state !== 'idle'}
+                rightElement={
+                  <InputIcon onPress={handleSendText}>
+                    <Ionicons
+                        name="send"
+                        size={20}
+                        color={textInput.trim() && state === 'idle' ? colors.foreground : colors.muted}
+                    />
+                  </InputIcon>
+                }
+            />
+          </View>
         </View>
 
-        <View className="items-center pt-4 pb-2">
-          <VoiceButton
-            state={state}
-            onPress={handlePress}
-            onLongPress={handleLongPress}
-          />
-          <Text className="text-sm text-muted-foreground mt-3 h-5">
-            {getHintText()}
-          </Text>
-        </View>
-
-        <View className="px-5 pb-4">
-          <Input
-            variant="filled"
-            placeholder="텍스트로 질문하기..."
-            value={textInput}
-            onChangeText={setTextInput}
-            onSubmitEditing={handleSendText}
-            returnKeyType="send"
-            isDisabled={state !== 'idle'}
-            rightElement={
-              <InputIcon onPress={handleSendText}>
-                <Ionicons
-                  name="send"
-                  size={20}
-                  color={textInput.trim() && state === 'idle' ? colors.foreground : colors.muted}
-                />
-              </InputIcon>
-            }
-          />
-        </View>
+        <BannerAd />
       </View>
-
-      <BannerAd />
-    </View>
   );
 }

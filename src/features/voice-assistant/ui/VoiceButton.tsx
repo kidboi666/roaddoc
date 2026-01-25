@@ -1,14 +1,13 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, memo } from 'react';
 import { Pressable, View, Animated, StyleSheet, Easing } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useSettings } from '@/shared/hooks';
-import { Colors } from '@/shared/config';
+import {Colors} from "@/shared/config";
 
 interface VoiceButtonProps {
   state: 'idle' | 'recording' | 'processing' | 'speaking';
+  isDark: boolean;
   onPress: () => void;
   onLongPress?: () => void;
-  disabled?: boolean;
 }
 
 const BUTTON_COLORS = {
@@ -29,138 +28,94 @@ const ICON_COLORS = {
   default: '#FFFFFF',
 };
 
-export function VoiceButton({
-  state,
-  onPress,
-  onLongPress,
-  disabled = false,
-}: VoiceButtonProps) {
-  const { isDark } = useSettings();
-  const pulseAnim1 = useRef(new Animated.Value(0)).current;
-  const pulseAnim2 = useRef(new Animated.Value(0)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
+function VoiceButtonComponent({ state, isDark, onPress, onLongPress }: VoiceButtonProps) {
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const spinAnim = useRef(new Animated.Value(0)).current;
   const waveAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    pulseAnim.stopAnimation();
+    spinAnim.stopAnimation();
+    waveAnim.stopAnimation();
+
+    pulseAnim.setValue(1);
+    spinAnim.setValue(0);
+    waveAnim.setValue(0);
+
     if (state === 'recording') {
-      const createPulse = (anim: Animated.Value, delay: number) =>
-        Animated.loop(
+      const pulse = Animated.loop(
           Animated.sequence([
-            Animated.delay(delay),
-            Animated.timing(anim, {
-              toValue: 1,
-              duration: 1500,
-              easing: Easing.out(Easing.ease),
+            Animated.timing(pulseAnim, {
+              toValue: 1.15,
+              duration: 600,
+              easing: Easing.inOut(Easing.ease),
               useNativeDriver: true,
             }),
-            Animated.timing(anim, {
-              toValue: 0,
-              duration: 0,
+            Animated.timing(pulseAnim, {
+              toValue: 1,
+              duration: 600,
+              easing: Easing.inOut(Easing.ease),
               useNativeDriver: true,
             }),
           ])
-        );
-
-      const pulse1 = createPulse(pulseAnim1, 0);
-      const pulse2 = createPulse(pulseAnim2, 750);
-
-      pulse1.start();
-      pulse2.start();
-
-      return () => {
-        pulse1.stop();
-        pulse2.stop();
-        pulseAnim1.setValue(0);
-        pulseAnim2.setValue(0);
-      };
-    }
-  }, [state, pulseAnim1, pulseAnim2]);
-
-  useEffect(() => {
-    if (state === 'processing') {
-      const rotate = Animated.loop(
-        Animated.timing(rotateAnim, {
-          toValue: 1,
-          duration: 1200,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        })
       );
-      rotate.start();
-      return () => {
-        rotate.stop();
-        rotateAnim.setValue(0);
-      };
+      pulse.start();
     }
-  }, [state, rotateAnim]);
 
-  useEffect(() => {
+    if (state === 'processing') {
+      const spin = Animated.loop(
+          Animated.timing(spinAnim, {
+            toValue: 1,
+            duration: 1000,
+            easing: Easing.linear,
+            useNativeDriver: true,
+          })
+      );
+      spin.start();
+    }
+
     if (state === 'speaking') {
       const wave = Animated.loop(
-        Animated.sequence([
-          Animated.timing(waveAnim, {
-            toValue: 1,
-            duration: 400,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-          Animated.timing(waveAnim, {
-            toValue: 0,
-            duration: 400,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-        ])
+          Animated.sequence([
+            Animated.timing(waveAnim, {
+              toValue: 1,
+              duration: 400,
+              easing: Easing.inOut(Easing.ease),
+              useNativeDriver: true,
+            }),
+            Animated.timing(waveAnim, {
+              toValue: 0,
+              duration: 400,
+              easing: Easing.inOut(Easing.ease),
+              useNativeDriver: true,
+            }),
+          ])
       );
       wave.start();
-      return () => {
-        wave.stop();
-        waveAnim.setValue(0);
-      };
     }
-  }, [state, waveAnim]);
 
-  useEffect(() => {
-    Animated.spring(scaleAnim, {
-      toValue: state === 'idle' ? 1 : 1.05,
-      friction: 5,
-      tension: 100,
-      useNativeDriver: true,
-    }).start();
-  }, [state, scaleAnim]);
+    return () => {
+      pulseAnim.stopAnimation();
+      spinAnim.stopAnimation();
+      waveAnim.stopAnimation();
+    };
+  }, [state, pulseAnim, spinAnim, waveAnim]);
 
-  const spin = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
+  const getButtonColor = () => {
+    if (state === 'idle') {
+      return isDark ? BUTTON_COLORS.idle.dark : BUTTON_COLORS.idle.light;
+    }
+    return BUTTON_COLORS[state];
+  };
 
-  const pulseScale1 = pulseAnim1.interpolate({
-    inputRange: [0, 1],
-    outputRange: [1, 1.8],
-  });
+  const getIconColor = () => {
+    if (state === 'idle') {
+      return isDark ? ICON_COLORS.idle.dark : ICON_COLORS.idle.light;
+    }
+    return ICON_COLORS.default;
+  };
 
-  const pulseOpacity1 = pulseAnim1.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.4, 0],
-  });
-
-  const pulseScale2 = pulseAnim2.interpolate({
-    inputRange: [0, 1],
-    outputRange: [1, 1.8],
-  });
-
-  const pulseOpacity2 = pulseAnim2.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.4, 0],
-  });
-
-  const waveScale = waveAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [1, 1.15],
-  });
-
-  const getIcon = (): 'mic' | 'stop' | 'sync' | 'volume-high' => {
+  const getIconName = (): keyof typeof Ionicons.glyphMap => {
     switch (state) {
       case 'recording':
         return 'stop';
@@ -173,105 +128,118 @@ export function VoiceButton({
     }
   };
 
-  const iconName = getIcon();
-  const buttonColor =
-    state === 'idle'
-      ? BUTTON_COLORS.idle[isDark ? 'dark' : 'light']
-      : BUTTON_COLORS[state];
-  const iconColor =
-    state === 'idle'
-      ? ICON_COLORS.idle[isDark ? 'dark' : 'light']
-      : ICON_COLORS.default;
+  const spinRotation = spinAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
 
-  return (
-    <View className="items-center justify-center w-44 h-44">
-      {state === 'recording' && (
+  const waveScale = waveAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.08],
+  });
+
+  const getAnimatedStyle = () => {
+    if (state === 'recording') {
+      return { transform: [{ scale: pulseAnim }] };
+    }
+    if (state === 'processing') {
+      return { transform: [{ rotate: spinRotation }] };
+    }
+    if (state === 'speaking') {
+      return { transform: [{ scale: waveScale }] };
+    }
+    return {};
+  };
+
+  const renderRipple = () => {
+    if (state !== 'recording') return null;
+
+    return (
         <>
           <Animated.View
-            style={[
-              styles.pulseRing,
-              {
-                backgroundColor: BUTTON_COLORS.recording,
-                transform: [{ scale: pulseScale1 }],
-                opacity: pulseOpacity1,
-              },
-            ]}
+              style={[
+                styles.ripple,
+                {
+                  backgroundColor: BUTTON_COLORS.recording,
+                  opacity: pulseAnim.interpolate({
+                    inputRange: [1, 1.15],
+                    outputRange: [0.3, 0],
+                  }),
+                  transform: [
+                    {
+                      scale: pulseAnim.interpolate({
+                        inputRange: [1, 1.15],
+                        outputRange: [1, 1.6],
+                      }),
+                    },
+                  ],
+                },
+              ]}
           />
           <Animated.View
-            style={[
-              styles.pulseRing,
-              {
-                backgroundColor: BUTTON_COLORS.recording,
-                transform: [{ scale: pulseScale2 }],
-                opacity: pulseOpacity2,
-              },
-            ]}
+              style={[
+                styles.ripple,
+                {
+                  backgroundColor: BUTTON_COLORS.recording,
+                  opacity: pulseAnim.interpolate({
+                    inputRange: [1, 1.15],
+                    outputRange: [0.2, 0],
+                  }),
+                  transform: [
+                    {
+                      scale: pulseAnim.interpolate({
+                        inputRange: [1, 1.15],
+                        outputRange: [1, 2],
+                      }),
+                    },
+                  ],
+                },
+              ]}
           />
         </>
-      )}
+    );
+  };
 
-      {state === 'speaking' && (
-        <Animated.View
-          style={[
-            styles.speakingRing,
-            {
-              transform: [{ scale: waveScale }],
-            },
-          ]}
-        />
-      )}
-
-      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-        <Pressable
-          onPress={onPress}
-          onLongPress={onLongPress}
-          disabled={disabled || state === 'processing'}
-          style={({ pressed }) => [
-            styles.button,
-            { backgroundColor: buttonColor },
-            state === 'idle' && !isDark && styles.idleLightButton,
-            pressed && styles.buttonPressed,
-            disabled && styles.buttonDisabled,
-          ]}
-        >
-          <Animated.View
-            style={
-              state === 'processing' ? { transform: [{ rotate: spin }] } : undefined
-            }
+  return (
+      <View style={styles.container}>
+        {renderRipple()}
+        <Animated.View style={getAnimatedStyle()}>
+          <Pressable
+              onPress={onPress}
+              onLongPress={onLongPress}
+              delayLongPress={500}
+              style={({ pressed }) => [
+                styles.button,
+                { backgroundColor: getButtonColor() },
+                state === 'idle' && !isDark && styles.idleLightButton,
+                pressed && styles.buttonPressed,
+              ]}
           >
-            <Ionicons name={iconName} size={44} color={iconColor} />
-          </Animated.View>
-        </Pressable>
-      </Animated.View>
-    </View>
+            <Ionicons name={getIconName()} size={32} color={getIconColor()} />
+          </Pressable>
+        </Animated.View>
+      </View>
   );
 }
 
 const styles = StyleSheet.create({
-  pulseRing: {
-    position: 'absolute',
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-  },
-  speakingRing: {
-    position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+  container: {
+    width: 80,
+    height: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   button: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    alignItems: 'center',
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     justifyContent: 'center',
+    alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
   },
   idleLightButton: {
     borderWidth: 2,
@@ -279,8 +247,14 @@ const styles = StyleSheet.create({
   },
   buttonPressed: {
     transform: [{ scale: 0.95 }],
+    opacity: 0.9,
   },
-  buttonDisabled: {
-    opacity: 0.5,
+  ripple: {
+    position: 'absolute',
+    width: 72,
+    height: 72,
+    borderRadius: 36,
   },
 });
+
+export const VoiceButton = memo(VoiceButtonComponent);

@@ -1,11 +1,11 @@
 import { useCallback, useRef, useEffect } from 'react';
-import { useVoiceStore } from './voiceStore';
+import { useVoiceState, useVoiceActions, usePreviousContext } from './voiceStore';
 import { useAudioRecorder } from './useAudioRecorder';
 import { useTTS } from './useTTS';
-import { useHaptics } from '@/shared/sounds/haptics';
+import { useHaptics } from './haptics';
 import { transcribeAudio } from '../api/transcribe';
 import { generateAnswer, isFollowUpCommand } from '../api/generateAnswer';
-import { useSettings } from '@/shared/hooks/useSettings';
+import {useSettings} from "@/shared/hooks";
 
 interface UseVoiceAssistantReturn {
   state: 'idle' | 'recording' | 'processing' | 'speaking';
@@ -24,31 +24,21 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
   const { settings } = useSettings();
   const { play: playHaptic } = useHaptics();
 
-  const {
-    state,
-    currentQuestion,
-    currentAnswer,
-    error,
-    previousContext,
-    setState,
-    setCurrentQuestion,
-    setCurrentAnswer,
-    setError,
-    setPreviousContext,
-    addMessage,
-    reset,
-  } = useVoiceStore();
+  const { state, currentQuestion, currentAnswer, error } = useVoiceState();
+  const previousContext = usePreviousContext();
+  const actions = useVoiceActions();
 
   const isProcessingRef = useRef(false);
+  const currentRequestIdRef = useRef<string | null>(null);
   const processRecordingRef = useRef<(() => Promise<void>) | null>(null);
 
   const { isSpeaking, speak, stop: stopTTS } = useTTS({
     speed: settings.ttsSpeed,
     onDone: () => {
-      setState('idle');
+      actions.setState('idle');
     },
     onError: () => {
-      setState('idle');
+      actions.setState('idle');
     },
   });
 
@@ -69,79 +59,91 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
     onSilenceDetected: handleSilenceDetected,
   });
 
+  const processQuestion = useCallback(async (
+      question: string,
+      context: { question: string; answer: string } | null,
+      requestId: string
+  ) => {
+    if (currentRequestIdRef.current !== requestId) return null;
+
+    const isFollowUp = isFollowUpCommand(question);
+    const effectiveContext = isFollowUp ? context : null;
+
+    const answerResult = await generateAnswer({
+      question,
+      previousContext: effectiveContext,
+      detailed: isFollowUp,
+    });
+
+    if (currentRequestIdRef.current !== requestId) return null;
+
+    if (!answerResult.success) {
+      actions.setError(answerResult.error || '답변 생성에 실패했습니다.');
+      await playHaptic('error');
+      actions.setState('idle');
+      return null;
+    }
+
+    const answer = answerResult.answer;
+    actions.setCurrentAnswer(answer);
+    actions.addMessage('answer', answer);
+    actions.setPreviousContext({ question, answer });
+
+    actions.setState('speaking');
+    await speak(answer);
+
+    return answer;
+  }, [actions, playHaptic, speak]);
+
   const processRecording = useCallback(async () => {
     if (isProcessingRef.current) return;
     isProcessingRef.current = true;
 
+    const requestId = `${Date.now()}-${Math.random()}`;
+    currentRequestIdRef.current = requestId;
+
     try {
       const audioUri = await stopRecording();
       if (!audioUri) {
-        setError('녹음 파일을 찾을 수 없습니다.');
-        setState('idle');
-        isProcessingRef.current = false;
+        actions.setError('녹음 파일을 찾을 수 없습니다.');
+        actions.setState('idle');
         return;
       }
 
-      setState('processing');
+      if (currentRequestIdRef.current !== requestId) return;
+
+      actions.setState('processing');
       await playHaptic('processing');
 
       const transcriptionResult = await transcribeAudio(audioUri);
+
+      if (currentRequestIdRef.current !== requestId) return;
+
       if (!transcriptionResult.success) {
-        setError(transcriptionResult.error || '음성 인식에 실패했습니다.');
+        actions.setError(transcriptionResult.error || '음성 인식에 실패했습니다.');
         await playHaptic('error');
-        setState('idle');
-        isProcessingRef.current = false;
+        actions.setState('idle');
         return;
       }
 
       const question = transcriptionResult.text;
-      setCurrentQuestion(question);
-      addMessage('question', question);
+      actions.setCurrentQuestion(question);
+      actions.addMessage('question', question);
 
-      const isFollowUp = isFollowUpCommand(question);
-      const context = isFollowUp ? previousContext : null;
-
-      const answerResult = await generateAnswer({
-        question,
-        previousContext: context,
-        detailed: isFollowUp,
-      });
-
-      if (!answerResult.success) {
-        setError(answerResult.error || '답변 생성에 실패했습니다.');
-        await playHaptic('error');
-        setState('idle');
-        isProcessingRef.current = false;
-        return;
-      }
-
-      const answer = answerResult.answer;
-      setCurrentAnswer(answer);
-      addMessage('answer', answer);
-      setPreviousContext({ question, answer });
-
-      setState('speaking');
-      await speak(answer);
+      await processQuestion(question, previousContext, requestId);
     } catch (err) {
-      console.error('Voice assistant error:', err);
-      setError('처리 중 오류가 발생했습니다.');
-      await playHaptic('error');
-      setState('idle');
+      if (currentRequestIdRef.current === requestId) {
+        console.error('Voice assistant error:', err);
+        actions.setError('처리 중 오류가 발생했습니다.');
+        await playHaptic('error');
+        actions.setState('idle');
+      }
     } finally {
-      isProcessingRef.current = false;
+      if (currentRequestIdRef.current === requestId) {
+        isProcessingRef.current = false;
+      }
     }
-  }, [
-    stopRecording,
-    playHaptic,
-    setError,
-    setState,
-    setCurrentQuestion,
-    setCurrentAnswer,
-    setPreviousContext,
-    addMessage,
-    previousContext,
-    speak,
-  ]);
+  }, [stopRecording, actions, playHaptic, previousContext, processQuestion]);
 
   useEffect(() => {
     processRecordingRef.current = processRecording;
@@ -149,17 +151,18 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
 
   const startListening = useCallback(async () => {
     try {
-      reset();
-      setState('recording');
+      currentRequestIdRef.current = null;
+      actions.reset();
+      actions.setState('recording');
       await playHaptic('start');
       await startRecording();
     } catch (err) {
       console.error('Failed to start listening:', err);
-      setError('마이크를 시작할 수 없습니다.');
+      actions.setError('마이크를 시작할 수 없습니다.');
       await playHaptic('error');
-      setState('idle');
+      actions.setState('idle');
     }
-  }, [reset, setState, playHaptic, startRecording, setError]);
+  }, [actions, playHaptic, startRecording]);
 
   const stopListening = useCallback(async () => {
     if (state !== 'recording') return;
@@ -169,70 +172,46 @@ export function useVoiceAssistant(): UseVoiceAssistantReturn {
   }, [state, playHaptic, processRecording]);
 
   const cancel = useCallback(async () => {
+    currentRequestIdRef.current = null;
+    isProcessingRef.current = false;
+
     if (isSpeaking) {
       await stopTTS();
     }
     if (isRecording) {
       await cancelRecording();
     }
-    reset();
-  }, [isSpeaking, stopTTS, isRecording, cancelRecording, reset]);
+    actions.reset();
+  }, [isSpeaking, stopTTS, isRecording, cancelRecording, actions]);
 
   const askQuestion = useCallback(async (question: string) => {
     if (isProcessingRef.current || !question.trim()) return;
     isProcessingRef.current = true;
 
+    const requestId = `${Date.now()}-${Math.random()}`;
+    currentRequestIdRef.current = requestId;
+
     try {
-      reset();
-      setCurrentQuestion(question);
-      addMessage('question', question);
-      setState('processing');
+      actions.reset();
+      actions.setCurrentQuestion(question);
+      actions.addMessage('question', question);
+      actions.setState('processing');
       await playHaptic('processing');
 
-      const isFollowUp = isFollowUpCommand(question);
-      const context = isFollowUp ? previousContext : null;
-
-      const answerResult = await generateAnswer({
-        question,
-        previousContext: context,
-        detailed: isFollowUp,
-      });
-
-      if (!answerResult.success) {
-        setError(answerResult.error || '답변 생성에 실패했습니다.');
-        await playHaptic('error');
-        setState('idle');
-        isProcessingRef.current = false;
-        return;
-      }
-
-      const answer = answerResult.answer;
-      setCurrentAnswer(answer);
-      addMessage('answer', answer);
-      setPreviousContext({ question, answer });
-
-      setState('speaking');
-      await speak(answer);
+      await processQuestion(question, previousContext, requestId);
     } catch (err) {
-      console.error('Ask question error:', err);
-      setError('처리 중 오류가 발생했습니다.');
-      await playHaptic('error');
-      setState('idle');
+      if (currentRequestIdRef.current === requestId) {
+        console.error('Ask question error:', err);
+        actions.setError('처리 중 오류가 발생했습니다.');
+        await playHaptic('error');
+        actions.setState('idle');
+      }
     } finally {
-      isProcessingRef.current = false;
+      if (currentRequestIdRef.current === requestId) {
+        isProcessingRef.current = false;
+      }
     }
-  }, [
-    reset,
-    setCurrentQuestion,
-    addMessage,
-    setState,
-    playHaptic,
-    previousContext,
-    setError,
-    setCurrentAnswer,
-    setPreviousContext,
-    speak,
-  ]);
+  }, [actions, playHaptic, previousContext, processQuestion]);
 
   return {
     state,

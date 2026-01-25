@@ -3,7 +3,7 @@ import { View, Text, ScrollView, Pressable, Alert, Platform } from 'react-native
 import { useRouter } from 'expo-router';
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
-import { APP_INFO, VOICE_CONFIG, Colors, getColors, type ThemeMode } from '@/shared/config';
+import {APP_INFO, VOICE_CONFIG, type ThemeMode, getColors, Colors} from '@/shared/config';
 import { useSettings } from '@/shared/hooks';
 import {
   Card,
