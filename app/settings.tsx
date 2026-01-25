@@ -285,7 +285,7 @@ export default function SettingsScreen() {
                   {option.label}
                 </ActionsheetItemText>
                 {settings.silenceTimeout === option.value && (
-                  <Ionicons name="checkmark" size={22} color="#3B82F6" style={{ marginLeft: 'auto' }} />
+                  <Ionicons name="checkmark" size={22} color={Colors.primary} style={{ marginLeft: 'auto' }} />
                 )}
               </ActionsheetItem>
             ))}

@@ -8,8 +8,8 @@ import {
 const BANNER_AD_UNIT_ID = __DEV__
   ? TestIds.BANNER
   : Platform.select({
-      ios: 'ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy',
-      android: 'ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy',
+      ios: 'ca-app-pub-2882120764375432/6074446884',
+      android: 'ca-app-pub-2882120764375432/3088534356',
     }) ?? TestIds.BANNER;
 
 export function BannerAd() {
